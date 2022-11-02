@@ -15,9 +15,9 @@ path = r'C:\Users\luizg\Desktop\casas.png'
 
 # Reading an image in default mode
 image = cv2.imread(path)
+image2 = image.copy() - image
 lines = image.shape[0]
 columns = image.shape[1]
-print(lines, columns)
 # Window name in which image is displayed
 window_name = 'Image'
 cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -35,77 +35,88 @@ color = (0, 0, 0)
 
 # Line thickness of 2 px
 thickness = 2
+aux = 0
+#min = 60 max < menor_valor(((columns/2)-90),((lines/2)-90))
+quarteirao = 100
 
-# Using cv2.rectangle() method
-# Draw a rectangle with blue line borders of thickness of 2 px
-
-meio_lines = int(lines / 2)
-for i in range(meio_lines-30, 0,-160):
-    print(i)
-    if i>=100:
-        if i==meio_lines-30:
-            image = cv2.line(image, (0,meio_lines), (columns,meio_lines), (0, 255, 255), thickness)
-        #superior
-        image = cv2.rectangle(image, (0, i), (100, i - 100), color, thickness)
-        #inferior
-        image = cv2.rectangle(image, (0, lines - i), (100, lines - i + 100), color, thickness)
-        #faixas
-        image = cv2.line(image, (0, i - 130), (columns, i - 130), (0, 255, 255), thickness)
-        image = cv2.line(image, (0, lines - i + 130), (columns, lines - i + 130), (0, 255, 255), thickness)
-    else:
-        #top
-        image = cv2.line(image, (0,i), (columns,i), (0, 0, 0), thickness)
-        limite_superior = i
-        image = cv2.line(image, (0, lines - i), (columns, lines - i), (0, 0, 0), thickness)
-        limite_inferior = lines - i
-
+meio_lines = int(lines / 2)       
 meio_columns = int(columns / 2)
-for i in range(meio_columns-30, 0,-160):
-    if i>=100:
-        if i==meio_columns-30:
-            image = cv2.line(image, (meio_columns, limite_superior), (meio_columns,limite_inferior), (0, 255, 255), thickness)
-        #esquerda
-        #image = cv2.rectangle(image, (i, 0), (i-100, 100), color, thickness)
-        #direita
-        #image = cv2.rectangle(image, (columns - i, 0), (columns - i + 100, 100), color, thickness)
-        #faixas
-        image = cv2.line(image, (i - 130,limite_superior), (i - 130,limite_inferior), (0, 255, 255), thickness)
-        image = cv2.line(image, (columns - i + 130,limite_superior), (columns - i + 130,limite_inferior), (0, 255, 255), thickness)
-    else:
-        image = cv2.line(image, (i,limite_superior), (i,limite_inferior), (0, 0, 0), thickness)
-        limite_esquerda = i
-        image = cv2.line(image, (columns - i,limite_superior), (columns - i,limite_inferior), (0, 0, 0), thickness)
-        limite_direita = columns - i
-        
-        image = cv2.rectangle(image, (0, limite_superior - 1), (i-2, limite_inferior + 1), (255, 255, 255), -1)
-        image = cv2.rectangle(image, (columns - i + 2, limite_superior - 1), (columns, limite_inferior + 1), (255, 255, 255), -1)
+for i in range(meio_lines-30, 0,-(quarteirao+60)):
+    if i>=quarteirao:
+        for j in range(meio_columns-30, 0,-(quarteirao+60)):
+            if aux == 0:
+                aux=1
+            if j>=quarteirao:
+                #superior esquerda
+                image = cv2.rectangle(image, (j, i), (j-quarteirao, i-quarteirao), color, thickness)
+                #superior direita
+                image = cv2.rectangle(image, (columns - j, i), (columns - j + quarteirao, i - quarteirao), color, thickness)
+                #inferior esquerda
+                image = cv2.rectangle(image, (j, lines - i), (j-quarteirao, lines - i + quarteirao), color, thickness)
+                #inferior direita
+                image = cv2.rectangle(image, (columns - j, lines - i), (columns - j + quarteirao, lines - i + quarteirao), color, thickness)
+        if aux == 1:
+            image = cv2.line(image, (j, 0), (j,lines), (0, 0, 0), thickness)
+            limite_esquerda = j
+            image = cv2.line(image, (columns - j,0), (columns - j,lines), (0, 0, 0), thickness)
+            limite_direita = columns - j
+            aux = 2
+image = cv2.line(image, (0,i), (columns,i), (0, 0, 0), thickness)
+limite_superior = i
+image = cv2.line(image, (0, lines - i), (columns, lines - i), (0, 0, 0), thickness)
+limite_inferior = lines - i
+image = cv2.rectangle(image, (0, limite_superior - 1), (limite_esquerda-2, limite_inferior + 1), (255, 255, 255), -1)
+image = cv2.rectangle(image, (limite_direita + 2, limite_superior - 1), (columns, limite_inferior + 1), (255, 255, 255), -1)
+image = cv2.rectangle(image, (limite_esquerda - 1, 0), (limite_direita + 1, limite_superior - 2), (255, 255, 255), -1)
+image = cv2.rectangle(image, (limite_esquerda - 1, limite_inferior + 2), (limite_direita + 1, columns), (255, 255, 255), -1)
+print(limite_esquerda,limite_direita,limite_superior,limite_inferior)
 
-#primeiro quarteirão
-#image = cv2.rectangle(image, (0, 0), (100, 100), color, thickness)
-#segundo quarteirão
-#image = cv2.rectangle(image, (0, 160), (100, 250), color, thickness)
-#image = cv2.line(image, (0,130), (columns,130), (0, 255, 255), thickness)
-atual=10
+k=limite_esquerda + 30
+aux2 = 1
+RuaVertical = [] 
+while(k<limite_direita):
+    rua = 'Rua Vertical ' + str(aux2)
+    image = cv2.putText(image, rua, (k, meio_lines-quarteirao), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
+    # image = cv2.circle(image, (k , meio_lines-quarteirao), 5, (255, 0, 0), -1)
+    RuaVertical.append(k)
+    k+= quarteirao + 60
+    aux2+=1
+print(RuaVertical)
+k=limite_superior + 30
+aux3 = 1
+RuaHorizontal = [] 
+print(meio_lines)
+while(k<limite_inferior):
+    rua = 'Rua Horizontal ' + str(aux3)
+    image = cv2.putText(image, rua, (meio_columns-quarteirao, k), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,0,255), 1, cv2.LINE_AA)
+    # image = cv2.circle(image, (meio_columns-quarteirao, k), 5, (255, 0, 0), -1)
+    RuaHorizontal.append(k)
+    k+= quarteirao + 60
+    aux3+=1
+
+atual=limite_esquerda+15
 anterior=atual
 atual2=580
 anterior2=atual2
-passo=50
+passo=15
 #max 587
 while 1:
     #indo à direita
-    image = cv2.circle(image, (anterior, 145), 10, (255, 255, 255), -1)
-    image = cv2.circle(image, (atual, 145), 10, (0, 255, 0), -1)
+    image2 = cv2.circle(image2, (anterior, RuaHorizontal[0] + 15), 10, (0, 0, 0), -1)
+    image2 = cv2.circle(image2, (atual, RuaHorizontal[0] + 15), 10, (255, 0, 255), -1)
+    #image3 =  image - image2
     anterior = atual
-    cv2.imshow(window_name, image)
-    if atual<=(587-passo):
-        atual+=passo
+    #cv2.imshow(window_name, image3)
+    if atual<=(limite_direita):
+        atual+=passo*6
     else:
-        atual=10
+        atual=limite_esquerda+15
     #indo à esquerda
-    image = cv2.circle(image, (anterior2, 115), 10, (255, 255, 255), -1)
-    image = cv2.circle(image, (atual2, 115), 10, (0, 255, 0), -1)
+    image2 = cv2.circle(image2, (anterior2, 115), 10, (0, 0, 0), -1)
+    image2 = cv2.circle(image2, (atual2, 115), 10, (255, 255, 0), -1)
     anterior2 = atual2
-    cv2.imshow(window_name, image)
+    image3 = image - image2   
+    cv2.imshow(window_name, image3)
     if atual2>=(passo):
         atual2-=passo
     else:
