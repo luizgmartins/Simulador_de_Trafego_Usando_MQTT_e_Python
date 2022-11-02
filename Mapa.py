@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 """
-Created on Tue Oct 25 18:56:25 2022
+Created on Tue Oct 25 18:56:23 2022
 
 @author: luizg
 """
