@@ -6,6 +6,7 @@ Created on Tue Oct 25 18:56:22 2022
 
 import cv2
 import time
+from random import randint
 path = r'C:\Users\luizg\Desktop\casas.png'
 
 image = cv2.imread(path)
@@ -21,7 +22,7 @@ color = (0, 0, 0)
 thickness = 2
 aux = 0
 #min = 60 max < menor_valor(((columns/2)-90),((lines/2)-90))
-quarteirao = 105
+quarteirao = 90
 meio_lines = int(lines / 2)       
 meio_columns = int(columns / 2)
 
@@ -80,102 +81,421 @@ while(k<limite_inferior):
     k+= quarteirao + 60
     aux3+=1
 # =============================================================================
+limites = []
+limites.append(limite_direita)
+limites.append(limite_esquerda)
+limites.append(limite_superior)
+limites.append(limite_inferior)
 
 
 atual=limite_esquerda+15
 anterior=atual
 atual2=limite_direita-15
 anterior2=atual2
-passo=15
+passo=30
 #max 587
 direcao = 2
 sentido = -1
-velocidade = 3
+velocidade = 1
 aux4 = 1
-while 1:
-    #indo à direita
-    
-    if direcao == 0:
-        
-        if aux4 == 1:
-            image2 = cv2.circle(image2, (anterior, RuaHorizontal[0] - 15), 10, (0, 0, 0), -1)
-            aux4 = -1
-        else:
-            image2 = cv2.circle(image2, (anterior, RuaHorizontal[0] + 15), 10, (0, 0, 0), -1)
-        image2 = cv2.circle(image2, (atual, RuaHorizontal[0] + 15), 10, (255, 0, 255), -1)
-        anterior = atual
-        if atual<(limite_direita-(passo*velocidade)):
-            atual+=passo*velocidade
-        elif atual<(limite_direita-30):
-            direcao = 2
-            velocidade = 3
-            aux4 = 1
-        else:
-            if velocidade > 1:
-                velocidade-=1
-            else:
-                direcao = 0
-                velocidade = 3
-                aux4 = 1
 
-    if direcao == 1:
-        if aux4 == 1:
-            image2 = cv2.circle(image2, (anterior, RuaHorizontal[0] + 15), 10, (0, 0, 0), -1)
-            aux4 = -1
-        else:
-            image2 = cv2.circle(image2, (anterior, RuaHorizontal[0] - 15), 10, (0, 0, 0), -1)
-        image2 = cv2.circle(image2, (atual, RuaHorizontal[0] - 15), 10, (255, 0, 255), -1)
-        anterior = atual
-        if atual>(limite_esquerda+(passo*velocidade)):
-            atual-=passo*velocidade
-        else:
-            if velocidade > 1:
-                velocidade-=1
+# =============================================================================
+def movimento_carro(image2, RuaHorizontal, RuaVertical, quarteirao, atual, direcao_atual, prox_direcao, passo, velocidade, x, y, i, j, limites):
+    X_MAX = ((quarteirao/passo)*(len(RuaVertical)-1)) + (len(RuaVertical) * 2) -1
+    Y_MAX = ((quarteirao/passo)*(len(RuaHorizontal)-1)) + (len(RuaHorizontal) * 2)-1
+    print(X_MAX)
+    anterior = atual
+    #Mover o carro para direita do mapa
+    if(prox_direcao == 0):
+        if(x < X_MAX):
+            print(RuaHorizontal[len(RuaHorizontal)-1])
+            if((atual+(passo*velocidade)) < (RuaVertical[i])):
+                atual += (passo*velocidade)
+                image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=1)
+                x += velocidade
+                if(velocidade<5):velocidade+=1
             else:
-                direcao = 0
-                velocidade = 3
-                aux4 = 1
-    if direcao == 2:
-        if aux4 == 1:
-            image2 = cv2.circle(image2, (anterior, RuaHorizontal[0] + 15), 10, (0, 0, 0), -1)
-            atual = RuaHorizontal[0] + 15
-            aux4 = -1
-        else:
-            image2 = cv2.circle(image2, (RuaVertical[6] - 15, anterior), 10, (0, 0, 0), -1)
-        image2 = cv2.circle(image2, (RuaVertical[6] - 15, atual), 10, (255, 0, 255), -1)
-        anterior = atual
-        if atual<(limite_inferior-(passo*velocidade)):
-            atual+=passo*velocidade
-        else:
-            if velocidade > 1:
-                velocidade-=1
+                if(direcao_atual == 0):
+                    if((atual + (passo*velocidade)) > limites[0]):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) < limites[0]) or (velocidade == 1)): break
+                            else: velocidade-=1
+                        atual += (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=1)
+                        x += velocidade
+                    else:
+                        atual += (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=1)
+                        x += velocidade
+                        if(i<(len(RuaVertical)-1)):
+                            i+=1
+                elif(direcao_atual == 1):
+                    if((atual + (passo*velocidade)) > limites[0]):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) < limites[0]) or (velocidade == 1)): break
+                            else: velocidade-=1
+                        atual += (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=1)
+                        x += velocidade
+                        atual = RuaHorizontal[j] + 15
+                        prox_direcao = 2
+                        direcao_atual = 0
+                    elif((atual + (passo*velocidade)) > (RuaVertical[i] + passo)):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) < (RuaVertical[i] + passo) or velocidade == 1)): break
+                            else: velocidade-=1
+                        atual += (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=1)
+                        x += velocidade
+                        i+=1
+                        atual = RuaHorizontal[j] + 15
+                        prox_direcao = 2
+                        direcao_atual = 0
+                    else:
+                        atual += (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=1)
+                        x += velocidade
+                        atual = RuaHorizontal[j] + 15
+                        prox_direcao = 2
+                        direcao_atual = 0
+                elif(direcao_atual == 2):
+                    if(RuaHorizontal[j] == RuaHorizontal[len(RuaHorizontal)-1]):
+                        if(((atual + (passo*velocidade)) > limites[0])):
+                            for index in range(1,6):
+                                if(((atual + (passo*velocidade)) < limites[0]) or (velocidade == 1)): break
+                                else: velocidade-=1
+                        direcao_atual = 0
+                        atual += (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=1)
+                        x += velocidade
+                        if i < len(RuaVertical)-1:
+                            i+=1
+                    elif((atual + 15) == RuaVertical[i]):
+                        atual = RuaHorizontal[j] + 15
+                        prox_direcao = 3
+                        direcao_atual = 0
+                    elif((atual + (passo*velocidade)) > RuaVertical[i]):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) < (RuaVertical[i]) or velocidade == 1)): break
+                            else: velocidade-=1
+                        atual += (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=1)
+                        x += velocidade
+                        atual = RuaHorizontal[j] + 15
+                        prox_direcao = 3
+                        direcao_atual = 0
+        elif(x == X_MAX):
+            prox_direcao = 2
+            direcao_atual = 0
+            atual = RuaHorizontal[j] + 15
+    #Mover o carro para esquerda do mapa
+    elif(prox_direcao == 1):
+        if(x > 0):
+            if( (atual - (passo*velocidade)) > (RuaVertical[i])):
+                atual -= (passo*velocidade)
+                image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=-1)
+                x -= velocidade
+                if(velocidade<5):velocidade+=1
             else:
-                direcao = 3
-                velocidade = 3
-                aux4 = 1
-    if direcao == 3:
-        if aux4==1:
-            image2 = cv2.circle(image2, (RuaVertical[6] - 15, anterior), 10, (0, 0, 0), -1)
-            aux4 = -1
-        else:
-            image2 = cv2.circle(image2, (RuaVertical[6] + 15, anterior), 10, (0, 0, 0), -1)
-        image2 = cv2.circle(image2, (RuaVertical[6] + 15, atual), 10, (255, 0, 255), -1)
-        anterior = atual
-        if atual>(limite_superior+(passo*velocidade)):
-            atual-=passo*velocidade
-        else:
-            if velocidade > 1:
-                velocidade-=1
+                if(direcao_atual == 0):
+                    if((atual - (passo*velocidade)) < limites[1]):
+                        for index in range(1,6):
+                            if(((atual - (passo*velocidade)) > limites[1]) or (velocidade == 1)): break
+                            else: velocidade-=1
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=-1)
+                        x -= velocidade
+                    else:
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=-1)
+                        x -= velocidade
+                        if(i>0):
+                            i-=1
+                elif(direcao_atual == 1):
+                    if(RuaHorizontal[j] == RuaHorizontal[0]):
+                        if(((atual - (passo*velocidade)) < limites[1])):
+                            for index in range(1,6):
+                                if(((atual - (passo*velocidade)) > limites[1]) or (velocidade == 1)): break
+                                else: velocidade-=1
+                        direcao_atual = 0
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=-1)
+                        x -= velocidade
+                        if i > 0:
+                            i-=1
+                    elif((atual - 15) == RuaVertical[i]):
+                        atual = RuaHorizontal[j] - 15
+                        prox_direcao = 2
+                        direcao_atual = 0
+                    elif((atual - (passo*velocidade)) < RuaVertical[i]):
+                        for index in range(1,6):
+                            if(((atual - (passo*velocidade)) > (RuaVertical[i]) or velocidade == 1)): break
+                            else: velocidade-=1
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=-1)
+                        x -= velocidade
+                        atual = RuaHorizontal[j] - 15
+                        prox_direcao = 2
+                        direcao_atual = 0
+                elif(direcao_atual == 2):
+                    if((atual - (passo*velocidade)) < limites[1]):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) > limites[1]) or (velocidade == 1)): break
+                            else: velocidade-=1
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=-1)
+                        x-= velocidade
+                        atual = RuaHorizontal[j] - 15
+                        prox_direcao = 3
+                        direcao_atual = 0
+                    elif((atual - (passo*velocidade)) < (RuaVertical[i] - passo)):
+                        for index in range(1,6):
+                            if(((atual - (passo*velocidade)) > (RuaVertical[i] - passo) or velocidade == 1)): break
+                            else: velocidade-=1
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=-1)
+                        x -= velocidade
+                        i-=1
+                        atual = RuaHorizontal[j] - 15
+                        prox_direcao = 3
+                        direcao_atual = 0
+                    else:
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z=-1)
+                        x -= velocidade
+                        atual = RuaHorizontal[j] - 15
+                        prox_direcao = 3
+                        direcao_atual = 0
+        elif(x == 0):
+            prox_direcao = 3
+            direcao_atual = 0
+            atual = RuaHorizontal[j] - 15
+    #Mover o carro para cima do mapa
+    elif(prox_direcao == 2):
+        if(y > 0):
+            if((atual-(passo*velocidade)) > (RuaHorizontal[j])):
+                atual -= (passo*velocidade)
+                image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                y -= velocidade
+                if(velocidade<5):velocidade+=1
             else:
-                direcao = 1
-                velocidade = 3
-                aux4 = 1
+                if(direcao_atual == 0):
+                    if((atual - (passo*velocidade)) < limites[2]):
+                        for index in range(1,6):
+                            if(((atual - (passo*velocidade)) > limites[2]) or (velocidade == 1)): break
+                            else: velocidade-=1
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                        y -= velocidade
+                    else:
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                        y -= velocidade
+                        if(j > 0):
+                            j-=1
+                elif(direcao_atual == 1):
+                    if(RuaVertical[i] == RuaVertical[len(RuaVertical)-1]):
+                        if(((atual - (passo*velocidade)) < limites[2])):
+                            for index in range(1,6):
+                                if(((atual - (passo*velocidade)) > limites[2]) or (velocidade == 1)): break
+                                else: velocidade-=1
+                        direcao_atual = 0
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                        y -= velocidade
+                        if j > 0:
+                            j-=1
+                    elif((atual - 15) == RuaHorizontal[j]):
+                        atual = RuaVertical[i] + 15
+                        prox_direcao = 0
+                        direcao_atual = 0
+                    elif((atual - (passo*velocidade)) < RuaHorizontal[j]):
+                        for index in range(1,6):
+                            if(((atual - (passo*velocidade)) > (RuaHorizontal[j]) or velocidade == 1)): break
+                            else: velocidade-=1
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                        y -= velocidade
+                        atual = RuaVertical[i] + 15
+                        prox_direcao = 0
+                        direcao_atual = 0
+                    else:
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                        y -= velocidade
+                        atual = RuaVertical[i] + 15
+                        prox_direcao = 0
+                        direcao_atual = 0
+                elif(direcao_atual == 2):
+                    if((atual - (passo*velocidade)) < limites[2]):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) > limites[2]) or (velocidade == 1)): break
+                            else: velocidade-=1
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                        y -= velocidade
+                        atual = RuaVertical[i] + 15
+                        prox_direcao = 1
+                        direcao_atual = 0
+                    elif((atual - (passo*velocidade)) < (RuaHorizontal[j] - passo)):
+                        for index in range(1,6):
+                            if(((atual - (passo*velocidade)) > (RuaVertical[i] - passo) or velocidade == 1)): break
+                            else: velocidade-=1
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                        y -= velocidade
+                        j-=1
+                        atual = RuaVertical[i] + 15
+                        prox_direcao = 1
+                        direcao_atual = 0
+                    else:
+                        atual -= (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=1)
+                        y -= velocidade
+                        atual = RuaVertical[i] + 15
+                        prox_direcao = 1
+                        direcao_atual = 0
+        elif(y == 0):
+            prox_direcao = 1
+            direcao_atual = 0
+            atual = RuaVertical[i] + 15
+    #Mover o carro para baixo do mapa
+    elif(prox_direcao == 3):
+        if(y < Y_MAX):
+            if((atual+(passo*velocidade)) < (RuaHorizontal[j])):
+                atual += (passo*velocidade)
+                image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=-1)
+                y += velocidade
+                if(velocidade<5):velocidade+=1
+            else:
+                if(direcao_atual == 0):
+                    if((atual + (passo*velocidade)) > limites[3]):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) < limites[3]) or (velocidade == 1)): break
+                            else: velocidade-=1
+                        atual += (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=-1)
+                        y += velocidade
+                    else:
+                        atual += (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=-1)
+                        y += velocidade
+                        if(j<(len(RuaHorizontal)-1)):
+                            j+=1
+                elif(direcao_atual == 1):
+                    if((atual + (passo*velocidade)) > limites[3]):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) < limites[3]) or (velocidade == 1)): break
+                            else: velocidade-=1
+                        atual += (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=-1)
+                        y += velocidade
+                        atual = RuaVertical[i] - 15
+                        prox_direcao = 0
+                        direcao_atual = 0
+                    elif((atual + (passo*velocidade)) > (RuaHorizontal[j] + passo)):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) < (RuaVertical[i] + passo) or velocidade == 1)): break
+                            else: velocidade-=1
+                        atual += (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=-1)
+                        y += velocidade
+                        j+=1
+                        atual = RuaVertical[i] - 15
+                        prox_direcao = 0
+                        direcao_atual = 0
+                    else:
+                        atual += (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=-1)
+                        y += velocidade
+                        atual = RuaVertical[i] - 15
+                        prox_direcao = 0
+                        direcao_atual = 0
+                elif(direcao_atual == 2):
+                    if(RuaVertical[i] == RuaVertical[0]):
+                        if(((atual + (passo*velocidade)) > limites[3])):
+                            for index in range(1,6):
+                                if(((atual + (passo*velocidade)) < limites[0]) or (velocidade == 1)): break
+                                else: velocidade-=1
+                        direcao_atual = 0
+                        atual += (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=-1)
+                        y += velocidade
+                        if j < len(RuaHorizontal)-1:
+                            j+=1
+                    elif((atual + 15) == RuaHorizontal[j]):
+                        atual = RuaVertical[i] - 15
+                        prox_direcao = 1
+                        direcao_atual = 0
+                    elif((atual + (passo*velocidade)) > RuaHorizontal[j]):
+                        for index in range(1,6):
+                            if(((atual + (passo*velocidade)) < (RuaHorizontal[j]) or velocidade == 1)): break
+                            else: velocidade-=1
+                        atual += (passo*velocidade)
+                        image2 = direcao_Vertical(image2, anterior, atual, RuaVertical, i, z=-1)
+                        y += velocidade
+                        atual = RuaVertical[i] - 15
+                        prox_direcao = 1
+                        direcao_atual = 0
+        elif(y == Y_MAX):
+            atual = RuaVertical[i] - 15
+            prox_direcao = 0
+            direcao_atual = 0
+    return image2, atual, direcao_atual, x, y, i, j, prox_direcao
+ 
+def direcao_Horizontal(image2, anterior, atual, RuaHorizontal, j, z):
+    image2 = cv2.circle(image2, (anterior, RuaHorizontal[j] + (15*z)), 10, (0, 0, 0), -1)
+    image2 = cv2.circle(image2, (atual, RuaHorizontal[j] +(15*z)), 10, (255, 0, 255), -1)
+    return image2
+def direcao_Vertical(image2, anterior, atual, RuaVertical, i, z):
+    image2 = cv2.circle(image2, (RuaVertical[i] + (15*z), anterior), 10, (0, 0, 0), -1)
+    image2 = cv2.circle(image2, (RuaVertical[i] + (15*z), atual), 10, (255, 0, 255), -1)
+    anterior = atual
+    return image2
+# =============================================================================
+atual = limites[2] - 15
+direcao_atual = 0
+prox_direcao = 3
+x = 0
+y = -1
+i=0
+j=0
+print(len(RuaVertical))
+teste = 0
+while 1:
+
+    
+    if(teste == 1):
+        print('i=',i,'j=', j, 'x=', x, 'y=', y, atual, prox_direcao, direcao_atual)
+        image2, atual, direcao_atual, x, y, i, j , prox_direcao = movimento_carro(image2, RuaHorizontal, RuaVertical, quarteirao, atual, direcao_atual, prox_direcao, passo, velocidade, x, y, i, j, limites)
+    if aux4 == 10:
+        if direcao_atual == 0:
+            direcao_atual = randint(0,2)
+        else:
+            direcao_atual = 0
+        aux4=0
+    aux4+=1
     
     image3 = image - image2   
     cv2.imshow(window_name, image3)
     key = cv2.waitKey(1)
     if key == 27:
         break
-    time.sleep(0.5)
+    elif key == 97:
+        if direcao_atual == 1:
+            direcao_atual = 0
+        else:
+            direcao_atual = 1
+    elif key == 98:
+        if direcao_atual == 2:
+            direcao_atual = 0
+        else:
+            direcao_atual = 2
+    elif key == 99:
+        if teste == 1:
+            teste = 0
+        else:
+            teste = 1
+    time.sleep(0.1)
 
 cv2.destroyAllWindows()
