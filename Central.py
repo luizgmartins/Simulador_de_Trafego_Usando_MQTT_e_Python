@@ -62,14 +62,15 @@ i = 0
 while 1:
     client.subscribe("transporte/usuario/central/local",1)
     client.subscribe("transporte/usuario/central/cancelar",1)
-    client.subscribe("transporte/carro/central",1)
+    client.subscribe("transporte/carro0/central",1)
+    client.subscribe("transporte/carro1/central",1)
     
     #Check if you are connected
     if conec == 1:
         #Checks if the 'p' button for Pub was pressed and if it is not disconnected, if so it makes pub
         if (keyboard.read_key() == "p") and (disc == 0):
             #print("Publishing message to topic","transporte/carro/teste2")
-            client.publish("transporte/central/carro", "Solicitação " + str(i))
+            client.publish("transporte/central/carro0", "Solicitação " + str(i))
             client.publish("transporte/central/usuario", "Confirmação " + str(i))
             i+=1
         #Pressing the d key ends the connection
