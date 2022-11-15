@@ -44,7 +44,8 @@ def on_message(client, userdata, msg):
     print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
 
 #Brokers address
-broker_address =    'test.mosquitto.org'
+# broker_address =    'test.mosquitto.org'
+broker_address =    'broker.emqx.io'
 
 client = mqtt.Client("Usuario")
 client.on_connect = on_connect
@@ -57,6 +58,8 @@ client.loop_start()
 time.sleep(2)
 
 i = 0
+x=1
+y=2
 
 while 1:
     client.subscribe("transporte/central/usuario",1)
@@ -65,8 +68,10 @@ while 1:
         #Checks if the 'p' button for Pub was pressed and if it is not disconnected, if so it makes pub
         if (keyboard.read_key() == "u") and (disc == 0):
             #print("Publishing message to topic","transporte/usuario")
-            client.publish("transporte/usuario/central/local", "Solicitação do Usuário " + str(i))
-            client.publish("transporte/usuario/central/cancelar", "Solicitação do Usuário " + str(i))
+            topico = 'transporte/usuario' + str(0)
+            msg = str(0) + '/' + str(x) + '/' + str(y)
+            client.publish(topico, msg)
+            # client.publish("transporte/usuario/central/cancelar", "Solicitação do Usuário " + str(i))
             i+=1
         #Pressing the d key ends the connection
         if keyboard.read_key() == "d":

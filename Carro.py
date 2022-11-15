@@ -14,12 +14,12 @@ Created on Tue Oct 25 06:48:40 2022
 
 #Required libraries
 import paho.mqtt.client as mqtt
-import keyboard
+# import keyboard
 import time
 import numpy as np
 import cv2
 import Mapa as mp
-from random import randint
+import random as rd
 
 path = r'Imagens\background_mapa.png'
 
@@ -58,12 +58,12 @@ def on_message(client, userdata, msg):
     print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
 
 #Brokers address
-broker_address =    'test.mosquitto.org'
-
+# broker_address =    'test.mosquitto.org'
+broker_address =    'broker.emqx.io'
 clients=[]
-nclients=2
+nclients= 20
 for i  in range(nclients):
-    cname="Carro1"+str(i)
+    cname="Carros_"+str(i)
     print("Creating new instance for " + cname +"...")
     client= mqtt.Client(cname)
     clients.append(client)
@@ -79,9 +79,9 @@ for client in clients:
 
 i = 0
 
-Cidade1, image, image2, window_name = mp.mapa_cidade(path, quarteirao=60)
+Cidade1, image, image2, window_name = mp.mapa_cidade(path, quarteirao=240)
 matriz_cidade, X_MAX, Y_MAX = mp.matriz_posicoes(Cidade1)
-posicoes, carros = mp.cria_carros(X_MAX, Y_MAX, matriz_cidade, quantidade=50)
+posicoes, carros = mp.cria_carros(X_MAX, Y_MAX, matriz_cidade, quantidade=nclients)
 aux = 1
 da = []
 pd = []
@@ -91,29 +91,42 @@ for n in range(len(carros)):
 teste = 1
 tempo = 0.05
 aux7 = 0
-
+aux2 = np.array(range(0,(len(carros))))
+rd.shuffle(aux2)
+aux3 = aux2[0: int(len(carros)*0.6)] 
 while 1:
-    if(teste == 1):
-        for m in range(len(carros)):
-            velocidade = mp.proxima(pd[m], posicoes, m, posicoes[m])
-            image2, posicoes[m], da[m], pd[m], velocidade = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade)
-            if(m==0):
-                clients[0].publish("transporte/carro0/central", str(posicoes[0]))
-            if(m==1):
-                clients[1].publish("transporte/carro1/central", str(posicoes[1]))
+    if aux7 == 15:
+        rd.shuffle(aux2)
+        aux3 = aux2[0: int(len(carros)*0.6)]
+        for q in range(len(pd)):
+            pd[q] = rd.randint(0,3)
+
+        aux7=0
     if aux == 5:
         for p in range(len(da)):
             if da[p] == 0:
-                da[p] = randint(0,2)
+                da[p] = rd.randint(0,2)
             else:
-                da[p] = randint(0,2)
+                da[p] = rd.randint(0,2)
         aux=0
+    if(teste == 1):
+        for m in range(len(carros)):
+            velocidade = mp.proxima(pd[m], posicoes, m, posicoes[m])
+            if m in aux3:
+                status = 1
+            else:
+                status = 0
+            image2, posicoes[m], da[m], pd[m], velocidade = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status)
+            msg = str(status) + '/' + str(posicoes[m][0]) + '/' + str(posicoes[m][1]) + '/' + str(velocidade)
+            topico =  'transporte/carro' + str(m)
+            clients[m].publish(topico, msg)
+            # if(m==0):
+            #     clients[0].publish(topico, msg)
+            # if(m==1):
+            #     clients[1].publish(topico, msg)
+    
     aux+=1    
-    if aux7 == 15:
-        for q in range(len(pd)):
-            pd[q] = randint(0,3)
 
-        aux7=0
     aux7+=1   
     image3 = image - image2   
     cv2.imshow(window_name, image3)
@@ -130,7 +143,7 @@ while 1:
             teste = 0
         else:
             teste = 1
-    time.sleep(1)
+    time.sleep(0.2)
     
     # for i in range(len(clients)):
     #     string = 'transporte/central/carro'+str(i)
@@ -149,7 +162,7 @@ while 1:
 cv2.destroyAllWindows()
 j = 0
 for client in clients:
-    print("Disconnecting Client", j) 
+    # print("Disconnecting Client", j) 
     client.loop_stop()
     client.disconnect()
     print("Disconnected Client", j)

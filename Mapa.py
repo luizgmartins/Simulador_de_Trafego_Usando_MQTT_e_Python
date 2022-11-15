@@ -166,11 +166,12 @@ class carro:
     def __init__(self, ID, placa):
         self.ID = ID
         self.placa = placa
-    def movimento_carro(self, image2, matriz_cidade, atual, direcao_atual, prox_direcao, velocidade):
+    def movimento_carro(self, image2, matriz_cidade, atual, direcao_atual, prox_direcao, velocidade, status):
         X_MAX, Y_MAX = np.shape(matriz_cidade)
         anterior = atual
         x = atual[0]
         y = atual[1]
+        color = cor(status)
         if velocidade == 0:
             velocidade = 0
         #Mover o carro para direita do mapa
@@ -183,7 +184,7 @@ class carro:
                     if(matriz_cidade[x,y+1] != (-1,-1)):
                         y+=1
                         atual = (x,y)
-                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         prox_direcao = 2
                         direcao_atual=1
@@ -195,7 +196,7 @@ class carro:
                         else:
                             y+=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         if((matriz_cidade[x+1,y] != (-1,-1)) and (y % 2 == 1)):
                             prox_direcao = 2
@@ -203,7 +204,7 @@ class carro:
                         else:
                             y+=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                 elif(direcao_atual == 2):
                     if(x < (X_MAX - 1)):
                         if((y % 2 == 0 and matriz_cidade[x+1,y] != (-1,-1))):
@@ -214,11 +215,11 @@ class carro:
                         else: 
                             y+=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         y+=1
                         atual = (x,y)
-                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
             elif(y == (Y_MAX - 1)):
                 prox_direcao = 2
                 direcao_atual = 0
@@ -232,7 +233,7 @@ class carro:
                     if(matriz_cidade[x,y-1] != (-1,-1)):
                         y-=1
                         atual = (x,y)
-                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         prox_direcao = 3
                         direcao_atual=2
@@ -246,11 +247,11 @@ class carro:
                         else: 
                             y-=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         y-=1
                         atual = (x,y)
-                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                 elif(direcao_atual == 2):
                     if(x <= (X_MAX-3)):
                         if((y % 2 == 0) and (matriz_cidade[x+2,y] != (-1,-1))):
@@ -259,7 +260,7 @@ class carro:
                         else:
                             y-=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         if((y % 2 == 0) and (matriz_cidade[x-1,y] != (-1,-1))):
                             prox_direcao = 3
@@ -267,7 +268,7 @@ class carro:
                         else:
                             y-=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
             elif(y == 0):
                 prox_direcao = 3
                 direcao_atual = 0
@@ -281,7 +282,7 @@ class carro:
                     if(matriz_cidade[x-1,y] != (-1,-1)):
                         x-=1
                         atual = (x,y)
-                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         prox_direcao = 1
                         direcao_atual=1
@@ -295,11 +296,11 @@ class carro:
                         else: 
                             x-=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         x-=1
                         atual = (x,y)
-                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                 elif(direcao_atual == 2):
                     if(y <= (Y_MAX-3)):
                         if((x % 2 == 0) and (matriz_cidade[x,y+1] != (-1,-1))):
@@ -308,7 +309,7 @@ class carro:
                         else:
                             x-=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         if((y % 2 == 0) and (matriz_cidade[x,y-2] != (-1,-1))):
                             prox_direcao = 1
@@ -316,7 +317,7 @@ class carro:
                         else:
                             x-=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
             elif(x == 0):
                 prox_direcao = 1
                 direcao_atual = 0
@@ -330,7 +331,7 @@ class carro:
                     if(matriz_cidade[x+1,y] != (-1,-1)):
                         x+=1
                         atual = (x,y)
-                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         prox_direcao = 0
                         direcao_atual= 2
@@ -342,7 +343,7 @@ class carro:
                         else:
                             x+=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         if((matriz_cidade[x,y-1] != (-1,-1)) and (x % 2 == 1)):
                             prox_direcao = 0
@@ -350,7 +351,7 @@ class carro:
                         else:
                             x+=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                 elif(direcao_atual == 2):
                     if(y > 0):
                         if((x % 2 == 0 and matriz_cidade[x,y-1] != (-1,-1))):
@@ -361,11 +362,11 @@ class carro:
                         else: 
                             x+=1
                             atual = (x,y)
-                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                            image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
                     else:
                         x+=1
                         atual = (x,y)
-                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual)
+                        image2 = direcao(image2, anterior, atual, matriz_cidade, prox_direcao, direcao_atual, color)
             elif(x == (X_MAX-1)):
                 prox_direcao = 0
                 direcao_atual = 0
@@ -373,12 +374,25 @@ class carro:
 # =============================================================================
 # Movimentar carro no mapa
 # =============================================================================
-def direcao(image2, anterior, atual, matriz_cidade, prox_direc, direc_atual):
+def direcao(image2, anterior, atual, matriz_cidade, prox_direc, direc_atual, color=(255, 255, 255)):
     x_anterior, y_anterior = anterior
     x_atual, y_atual = atual
     image2 = cv2.circle(image2, (matriz_cidade[x_anterior][y_anterior][0], matriz_cidade[x_anterior][y_anterior][1]), 10, (0, 0, 0), -1)
-    image2 = cv2.circle(image2, (matriz_cidade[x_atual][y_atual][0], matriz_cidade[x_atual][y_atual][1]), 10, (255, 255, 255), -1)
+    image2 = cv2.circle(image2, (matriz_cidade[x_atual][y_atual][0], matriz_cidade[x_atual][y_atual][1]), 10, color, -1)
     return image2
+# =============================================================================
+# Define a cor de acordo com o status do carro
+# =============================================================================
+def cor(status=0):
+    if status == 0:
+        color = (255, 255, 255)
+    elif status == 1:
+        color = (255, 255, 0)
+    elif status == 2:
+        color = (0, 255, 255)
+    elif status == 3:
+        color = (255, 0, 255)
+    return color
 # =============================================================================
 # Criando carros
 # =============================================================================
