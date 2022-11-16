@@ -27,6 +27,9 @@ path = r'Imagens\background_mapa.png'
 first = 0
 conec = 0
 disc  = 1
+flag = 0
+central_statecar = 0
+prox_direc_car = 0
 
 #Function to show the log
 def on_log(client, userdata, level, buf):
@@ -55,13 +58,29 @@ def on_disconnect(client, userdata, flags, rc=0):
 
 #Function to print the received message
 def on_message(client, userdata, msg):
-    print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
+    # print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
+    salva_msg(str(msg.payload.decode("utf-8")), str(msg.topic))
+
+def salva_msg(mensagem, topico):
+    global flag
+    global id_carro
+    global central_statecar
+    global prox_direc_car
+    msg = mensagem.split('/')
+    id_carro = msg[0]
+    central_statecar = msg[1]
+    prox_direc_car = msg[2]
+    if int(central_statecar) > 1 and int(central_statecar) < 4:
+        flag = 1
+    else:
+        flag = 0
+        
 
 #Brokers address
 # broker_address =    'test.mosquitto.org'
 broker_address =    'broker.emqx.io'
 clients=[]
-nclients= 20
+nclients= 10
 for i  in range(nclients):
     cname="Carros_"+str(i)
     print("Creating new instance for " + cname +"...")
@@ -91,16 +110,21 @@ for n in range(len(carros)):
 teste = 1
 tempo = 0.05
 aux7 = 0
+aux4 = 0
 aux2 = np.array(range(0,(len(carros))))
 rd.shuffle(aux2)
 aux3 = aux2[0: int(len(carros)*0.6)] 
+
+client.subscribe("transporte/central_carro" ,1)
+msg = str(X_MAX) + '/' + str(Y_MAX) + '/0/0'
+client.publish('transporte/inicio', msg)
+
 while 1:
     if aux7 == 15:
         rd.shuffle(aux2)
         aux3 = aux2[0: int(len(carros)*0.6)]
         for q in range(len(pd)):
             pd[q] = rd.randint(0,3)
-
         aux7=0
     if aux == 5:
         for p in range(len(da)):
@@ -116,17 +140,18 @@ while 1:
                 status = 1
             else:
                 status = 0
+            if flag == 1 and m == id_carro:
+                status = central_statecar
+                pd[m] = prox_direc_car
+            if central_statecar == 2:
+                aux4 +=1
+                if aux4 == 10:
+                    aux4 = 0
             image2, posicoes[m], da[m], pd[m], velocidade = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status)
             msg = str(status) + '/' + str(posicoes[m][0]) + '/' + str(posicoes[m][1]) + '/' + str(velocidade)
             topico =  'transporte/carro' + str(m)
             clients[m].publish(topico, msg)
-            # if(m==0):
-            #     clients[0].publish(topico, msg)
-            # if(m==1):
-            #     clients[1].publish(topico, msg)
-    
     aux+=1    
-
     aux7+=1   
     image3 = image - image2   
     cv2.imshow(window_name, image3)
@@ -144,21 +169,6 @@ while 1:
         else:
             teste = 1
     time.sleep(0.2)
-    
-    # for i in range(len(clients)):
-    #     string = 'transporte/central/carro'+str(i)
-    #     clients[i].subscribe(string,1)
-    
-    # #Check if you are connected
-    # if conec == 1:
-    #     #Checks if the 'p' button for Pub was pressed and if it is not disconnected, if so it makes pub
-    #     if (keyboard.read_key() == "c") and (disc == 0):
-    #         #print("Publishing message to topic","transporte/carro/teste1")
-    #         clients[0].publish("transporte/carro/central", "Confirmação OK" + str(i))
-    #         i+=1
-    #     #Pressing the d key ends the connection
-    #     if keyboard.read_key() == "d":
-    #         break
 cv2.destroyAllWindows()
 j = 0
 for client in clients:
@@ -167,4 +177,4 @@ for client in clients:
     client.disconnect()
     print("Disconnected Client", j)
     j+=1
-time.sleep(2)
+# time.sleep(2)

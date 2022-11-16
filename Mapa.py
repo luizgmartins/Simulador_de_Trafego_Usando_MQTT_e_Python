@@ -8,7 +8,6 @@ Created on Tue Oct 25 18:56:22 2022
 # Bibliotecas
 # =============================================================================
 import cv2
-import time
 from random import randint
 import numpy as np
 
@@ -172,6 +171,9 @@ class carro:
         x = atual[0]
         y = atual[1]
         color = cor(status)
+        if status == 2:
+            atual = estacionar(image2, atual, matriz_cidade, X_MAX, Y_MAX)
+            return image2, atual, direcao_atual, prox_direcao, velocidade
         if velocidade == 0:
             velocidade = 0
         #Mover o carro para direita do mapa
@@ -394,6 +396,39 @@ def cor(status=0):
         color = (255, 0, 255)
     return color
 # =============================================================================
+# Estaciona carro
+# =============================================================================
+def estacionar(image2, atual, matriz_cidade, X_MAX, Y_MAX):
+    x = atual[0]
+    y = atual[1]
+    image2 = cv2.circle(image2, (matriz_cidade[x][y][0], matriz_cidade[x][y][1]), 10, (0, 0, 0), -1)
+    if x == 0:
+        image2 = cv2.circle(image2, (matriz_cidade[x][y][0], matriz_cidade[x][y][1]-30), 10, cor(2), -1)
+    elif x == (len(X_MAX)-1):
+        image2 = cv2.circle(image2, (matriz_cidade[x][y][0], matriz_cidade[x][y][1]+30), 10, cor(2), -1)
+    elif y == 0:
+        image2 = cv2.circle(image2, (matriz_cidade[x][y][0]-30, matriz_cidade[x][y][1]), 10, cor(2), -1)
+    elif y == (len(Y_MAX)-1):
+        image2 = cv2.circle(image2, (matriz_cidade[x][y][0]+30, matriz_cidade[x][y][1]), 10, cor(2), -1)
+    else:
+        if matriz_cidade[x-1][y] == (-1, -1):
+            image2 = cv2.circle(image2, (matriz_cidade[x-1][y][0], matriz_cidade[x-1][y][1]), 10, cor(2), -1)
+        elif matriz_cidade[x][y-1] == (-1, -1):
+            image2 = cv2.circle(image2, (matriz_cidade[x][y-1][0], matriz_cidade[x][y-1][1]), 10, cor(2), -1)
+        elif matriz_cidade[x][y+1] == (-1, -1):
+            image2 = cv2.circle(image2, (matriz_cidade[x][y+1][0], matriz_cidade[x][y+1][1]), 10, cor(2), -1)
+        elif matriz_cidade[x+1][y] == (-1, -1):
+            image2 = cv2.circle(image2, (matriz_cidade[x+1][y][0], matriz_cidade[x+1][y][1]), 10, cor(2), -1)
+        elif matriz_cidade[x-1][y-1] == (-1, -1):
+            image2 = cv2.circle(image2, (matriz_cidade[x-1][y-1][0], matriz_cidade[x-1][y-1][1]), 10, cor(2), -1)
+        elif matriz_cidade[x-1][y+1] == (-1, -1):
+            image2 = cv2.circle(image2, (matriz_cidade[x-1][y+1][0], matriz_cidade[x-1][y+1][1]), 10, cor(2), -1)
+        elif matriz_cidade[x+1][y-1] == (-1, -1):
+            image2 = cv2.circle(image2, (matriz_cidade[x+1][y-1][0], matriz_cidade[x+1][y-1][1]), 10, cor(2), -1)
+        elif matriz_cidade[x+1][y+1] == (-1, -1):
+            image2 = cv2.circle(image2, (matriz_cidade[x+1][y+1][0], matriz_cidade[x+1][y+1][1]), 10, cor(2), -1)
+    return atual
+# =============================================================================
 # Criando carros
 # =============================================================================
 def cria_carros(X_MAX, Y_MAX, matriz_cidade, quantidade):
@@ -455,54 +490,4 @@ def proxima(proxima_direcao, posicoes, ID, atual):
                 velocidade = 1
     return velocidade
 # =============================================================================
-# Cidade1, image, image2, window_name = mapa_cidade(path, quarteirao=60)
-# matriz_cidade, X_MAX, Y_MAX = matriz_posicoes(Cidade1)
-# posicoes, carros = cria_carros(X_MAX, Y_MAX, matriz_cidade, quantidade=50)
 
-# aux = 1
-# da = []
-# pd = []
-# for n in range(len(carros)):
-#     da.append(0)
-#     pd.append(3)
-# teste = 1
-# tempo = 0.05
-# aux7 = 0
-
-# while 1:
-#     if(teste == 1):
-#         for m in range(len(carros)):
-#             velocidade = proxima(pd[m], posicoes, m, posicoes[m])
-#             image2, posicoes[m], da[m], pd[m], velocidade = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade)
-#     if aux == 5:
-#         for p in range(len(da)):
-#             if da[p] == 0:
-#                 da[p] = randint(0,2)
-#             else:
-#                 da[p] = randint(0,2)
-#         aux=0
-#     aux+=1    
-#     if aux7 == 15:
-#         for q in range(len(pd)):
-#             pd[q] = randint(0,3)
-
-#         aux7=0
-#     aux7+=1   
-#     image3 = image - image2   
-#     cv2.imshow(window_name, image3)
-#     key = cv2.waitKey(1)
-#     if key == 27:
-#         break
-#     elif key == 97:
-#         if tempo > 0.01:
-#             tempo -= 0.01
-#     elif key == 98:
-#         tempo += 0.01
-#     elif key == 99:
-#         if teste == 1:
-#             teste = 0
-#         else:
-#             teste = 1
-#     time.sleep(tempo)
-
-# cv2.destroyAllWindows()
