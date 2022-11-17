@@ -50,7 +50,7 @@ def on_disconnect(client, userdata, flags, rc=0):
 
 #Function to print the received message
 def on_message(client, userdata, msg):
-    print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
+    # print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
     salva_msg(str(msg.payload.decode("utf-8")), str(msg.topic))
 
 def salva_msg(mensagem, topico):
@@ -69,7 +69,7 @@ def salva_msg(mensagem, topico):
     topic = topico.split('/')
     topic = topic[1]
     aux = topic.split('o')
-    if aux[0] == 'inic':
+    if aux[0] == 'inici':
         X_MAX = int(msg[0])
         Y_MAX = int(msg[1])
     else:
@@ -86,6 +86,15 @@ def salva_msg(mensagem, topico):
             y_viagem = int(y)
             status = 5
             flag = 1
+        elif tipo == 1:
+            x_viagem = int(x)
+            y_viagem = int(y)
+        elif tipo == 2:
+            client.publish("transporte/central_usuario", '4')
+            top = 'transporte/carro' + str(carro_em_uso)
+            menssage = str(carro_em_uso) + '/2/0'
+            client.publish(top, menssage)
+            
     arq_name = 'Historico/' + str(topic) + '.txt'
     arquivo = open(arq_name,'a')
     arquivo.write(mensagem + "\n")
@@ -97,15 +106,15 @@ def mover_carro(x_viagem, y_viagem, x_atual, y_atual):
         prox_direcao = 3
     elif x_atual > x_viagem:
         prox_direcao = 2
-    elif y_atual < x_viagem:
+    elif y_atual < y_viagem:
         prox_direcao = 0
-    elif y_atual > x_viagem:
+    elif y_atual > y_viagem:
         prox_direcao = 1
     elif x_atual == x_viagem and y_atual == y_viagem:
         if flag == 2:
             flag = 3
-        elif flag == 4:
-            flag = 5
+        elif flag == 5:
+            flag = 6
     return prox_direcao
 
 #Brokers address
@@ -132,7 +141,7 @@ while 1:
     #Check if you are connected
     if conec == 1:
         if flag == 1:
-            if x_viagem < X_MAX and y_viagem < Y_MAX and x_viagem > 0 and y_viagem>0:
+            if x_viagem < X_MAX and y_viagem < Y_MAX and x_viagem >= 0 and y_viagem >= 0:
                 if int(status) == 0:
                     carro_em_uso = id_carro
                     x_atual = x
@@ -161,15 +170,19 @@ while 1:
             top = 'transporte/carro' + str(carro_em_uso)
             menssage = str(carro_em_uso) + '/2/0'
             client.publish(top, menssage)
-            if x_viagem < X_MAX and y_viagem < Y_MAX and x_viagem > 0 and y_viagem>0:
-                flag = 4
-                client.publish("transporte/central_usuario", '2')
-            else:
-                client.publish("transporte/central_usuario", '4')
-                top = 'transporte/carro' + str(carro_em_uso)
-                menssage = str(carro_em_uso) + '/2/0'
-                client.publish(top, menssage)
+            flag = 4
         if flag == 4:
+            if tipo == 1:
+                if x_viagem < X_MAX and y_viagem < Y_MAX and x_viagem >= 0 and y_viagem >= 0:
+                    client.publish("transporte/central_usuario", '2')
+                else:
+                    client.publish("transporte/central_usuario", '4')
+                    top = 'transporte/carro' + str(carro_em_uso)
+                    menssage = str(carro_em_uso) + '/2/0'
+                    client.publish(top, menssage)
+                tipo = 5
+                flag = 5
+        if flag == 5:
             if id_carro == carro_em_uso:
                 x_atual = x
                 y_atual = y
@@ -177,14 +190,12 @@ while 1:
                 top = 'transporte/carro' + str(carro_em_uso)
                 menssage = str(carro_em_uso) + '/3/' + str(prox_direcao)
                 client.publish(top, menssage)
-        if flag == 5:
+        if flag == 6:
             client.publish("transporte/central_usuario", '3')
             top = 'transporte/carro' + str(carro_em_uso)
             menssage = str(carro_em_uso) + '/2/' + str(prox_direcao)
             client.publish(top, menssage)
             flag = 0
-        if tipo == 2:    
-            client.publish("transporte/central_usuario", '4')
             
         #Checks if the 'p' button for Pub was pressed and if it is not disconnected, if so it makes pub
         if (keyboard.read_key() == "p"):

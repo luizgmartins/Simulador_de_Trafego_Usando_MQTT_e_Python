@@ -30,6 +30,7 @@ disc  = 1
 flag = 0
 central_statecar = 0
 prox_direc_car = 0
+estacionado = (-1,-1)
 
 #Function to show the log
 def on_log(client, userdata, level, buf):
@@ -117,7 +118,7 @@ aux3 = aux2[0: int(len(carros)*0.6)]
 
 client.subscribe("transporte/central_carro" ,1)
 msg = str(X_MAX) + '/' + str(Y_MAX) + '/0/0'
-client.publish('transporte/inicio', msg)
+clients[0].publish('transporte/inicio', msg)
 
 while 1:
     if aux7 == 15:
@@ -146,8 +147,10 @@ while 1:
             if central_statecar == 2:
                 aux4 +=1
                 if aux4 == 10:
+                    status = 0
+                    flag = 0
                     aux4 = 0
-            image2, posicoes[m], da[m], pd[m], velocidade = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status)
+            image2, posicoes[m], da[m], pd[m], velocidade, estacionado = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status, estacionado)
             msg = str(status) + '/' + str(posicoes[m][0]) + '/' + str(posicoes[m][1]) + '/' + str(velocidade)
             topico =  'transporte/carro' + str(m)
             clients[m].publish(topico, msg)
