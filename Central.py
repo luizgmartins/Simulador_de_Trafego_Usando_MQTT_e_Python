@@ -22,6 +22,8 @@ tipo = 5
 flag = 0
 X_MAX = 0
 Y_MAX = 0
+carro_em_uso = -1
+status = []
 
 #Function to show the log
 def on_log(client, userdata, level, buf):
@@ -72,21 +74,26 @@ def salva_msg(mensagem, topico):
     if aux[0] == 'inici':
         X_MAX = int(msg[0])
         Y_MAX = int(msg[1])
+        ncarros = int(msg[2])
+        for i in range(0,ncarros):
+            status.append(0)
     else:
         x = int(msg[1])
         y = int(msg[2])
         if aux[0] == 'carr':   
-            status = int(msg[0])
-            velocidade = int(msg[3])
             id_carro = int(aux[1])
+            status[id_carro] = int(msg[0])
+            velocidade = int(msg[3])
         elif aux[0] == 'usuari':
             tipo = int(msg[0])
+            print(tipo)
         if tipo == 0:
             x_viagem = int(x)
             y_viagem = int(y)
-            status = 5
             flag = 1
+            tipo = 5
         elif tipo == 1:
+            print('aqui')
             x_viagem = int(x)
             y_viagem = int(y)
         elif tipo == 2:
@@ -141,9 +148,13 @@ while 1:
     #Check if you are connected
     if conec == 1:
         if flag == 1:
+            print('um')
             if x_viagem < X_MAX and y_viagem < Y_MAX and x_viagem >= 0 and y_viagem >= 0:
-                if int(status) == 0:
-                    carro_em_uso = id_carro
+                for j in range(0, len(status)):
+                    if j == 0:
+                        carro_em_uso = j
+                        break
+                if id_carro == carro_em_uso:
                     x_atual = x
                     y_atual = y
                     client.publish("transporte/central_usuario", '0')
@@ -151,11 +162,12 @@ while 1:
                     menssage = str(carro_em_uso) + '/2/0'
                     client.publish(top, menssage)
                     flag = 2
-            else:
-                client.publish("transporte/central_usuario", '4')
-                top = 'transporte/carro' + str(carro_em_uso)
-                menssage = str(carro_em_uso) + '/2/0'
-                client.publish(top, menssage)
+                else:
+                    if keyboard.read_key() == "m":
+                        client.publish("transporte/central_usuario", '4')
+                        top = 'transporte/carro' + str(carro_em_uso)
+                        menssage = str(carro_em_uso) + '/2/0'
+                        client.publish(top, menssage)
             tipo = 5
         if flag == 2:
             if id_carro == carro_em_uso:
@@ -198,10 +210,10 @@ while 1:
             flag = 0
             
         #Checks if the 'p' button for Pub was pressed and if it is not disconnected, if so it makes pub
-        if (keyboard.read_key() == "p"):
-            # client.publish("transporte/carro0", "Solicitação " + str(i))
-            estado = input('Manda o estado aí doidão: ')
-            client.publish("transporte/central_usuario", estado)
+        # if (keyboard.read_key() == "p"):
+        #     # client.publish("transporte/carro0", "Solicitação " + str(i))
+        #     estado = input('Manda o estado aí doidão: ')
+        #     client.publish("transporte/central_usuario", estado)
         #Pressing the d key ends the connection
         if keyboard.read_key() == "d":
             break

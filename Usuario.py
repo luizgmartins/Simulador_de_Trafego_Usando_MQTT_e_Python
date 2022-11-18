@@ -96,6 +96,9 @@ while 1:
                 print('Cancelamento de viagem solicitado')
                 msg = str(2) + '/' + str(0) + '/' + str(0)
                 client.publish(topico, msg)
+            elif keyboard.read_key() == "q":
+                viagem = 'n'
+                break
             else:
                 if status == 4:
                     print('Viagem cancelada')
