@@ -8,6 +8,7 @@ Created on Tue Oct 25 07:44:07 2022
 import paho.mqtt.client as mqtt
 import keyboard
 import time
+import cv2
 
 #Global variables
 first = 0
@@ -72,29 +73,26 @@ while 1:
     #Check if you are connected
     if conec == 1:
         if keyboard.read_key() == "v":
-            while 1:
-                viagem = input('Gostaria de solicitar uma viagem?[y/n]')
-                if viagem == 'y':
-                    print('Envie qual o seu local: ')
-                    x = int(input('x: '))
-                    y = int(input('y: '))
-                    msg = str(0) + '/' + str(x) + '/' + str(y)
-                    client.publish(topico, msg)
-                    viagem = 'aguardando'
-                    break
-                elif viagem != 'n':
-                    print('Parâmetro inválido')
-                else:
-                    break
+            viagem = input('Gostaria de solicitar uma viagem?[y/n]')
+            if viagem == 'y':
+                print('Envie qual o seu local: ')
+                x = int(input('x: '))
+                y = int(input('y: '))
+                msg = str(0) + '/' + str(x) + '/' + str(y)
+                client.publish(topico, msg)
+                viagem = 'aguardando'
+            elif viagem != 'n':
+                print('Parâmetro inválido')
         elif keyboard.read_key() == "f":
             break
         while viagem == 'aguardando':
+            cv2.waitKey(1)
             if flag == 0:
                 print('Aguardando retorno da central...')
                 flag = 1
             if keyboard.read_key() == "u":
                 print('Cancelamento de viagem solicitado')
-                msg = str(2) + '/' + str(0) + '/' + str(0)
+                msg = '2/0/0'
                 client.publish(topico, msg)
             elif keyboard.read_key() == "q":
                 viagem = 'n'

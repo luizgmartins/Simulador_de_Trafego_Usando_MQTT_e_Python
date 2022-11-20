@@ -31,6 +31,8 @@ flag = 0
 central_statecar = 0
 prox_direc_car = 0
 estacionado = (-1,-1)
+id_carro = -1
+direc_atual = 0
 
 #Function to show the log
 def on_log(client, userdata, level, buf):
@@ -59,19 +61,19 @@ def on_disconnect(client, userdata, flags, rc=0):
 
 #Function to print the received message
 def on_message(client, userdata, msg):
-    # print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
+    print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
     salva_msg(str(msg.payload.decode("utf-8")), str(msg.topic))
 
 def salva_msg(mensagem, topico):
     global flag
     global id_carro
     global central_statecar
-    global prox_direc_car
+    global direc_atual
     msg = mensagem.split('/')
-    id_carro = msg[0]
-    central_statecar = msg[1]
-    prox_direc_car = msg[2]
-    if int(central_statecar) > 1 and int(central_statecar) < 4:
+    id_carro = int(msg[0])
+    central_statecar = int (msg[1])
+    direc_atual = int(msg[2])
+    if central_statecar > 1 and central_statecar < 4:
         flag = 1
     else:
         flag = 0
@@ -81,7 +83,7 @@ def salva_msg(mensagem, topico):
 # broker_address =    'test.mosquitto.org'
 broker_address =    'broker.emqx.io'
 clients=[]
-nclients= 5
+nclients= 1
 for i  in range(nclients):
     cname="Carros_"+str(i)
     print("Creating new instance for " + cname +"...")
@@ -108,11 +110,11 @@ pd = []
 for n in range(len(carros)):
     da.append(0)
     pd.append(3)
-teste = 1
+teste = 0
 tempo = 0.05
 aux7 = 0
 aux4 = 0
-aux2 = np.array(range(1,(len(carros))))
+aux2 = np.array(range(0,(len(carros))))
 rd.shuffle(aux2)
 aux3 = aux2[0: int(len(carros)*0.6)] 
 
@@ -121,6 +123,11 @@ msg = str(X_MAX) + '/' + str(Y_MAX) + '/' + str(nclients) + '/0'
 clients[0].publish('transporte/inicio', msg)
 
 while 1:
+    if id_carro == -2:
+        teste = 1
+        id_carro = -1
+        msg = str(X_MAX) + '/' + str(Y_MAX) + '/' + str(nclients) + '/0'
+        clients[0].publish('transporte/inicio', msg)
     if aux7 == 15:
         rd.shuffle(aux2)
         aux3 = aux2[0: int(len(carros)*0.6)]
@@ -137,21 +144,30 @@ while 1:
     if(teste == 1):
         for m in range(len(carros)):
             velocidade = mp.proxima(pd[m], posicoes, m, posicoes[m])
-            if m in aux3:
-                status = 1
-            else:
-                status = 0
             if flag == 1 and m == id_carro:
                 status = central_statecar
-                pd[m] = prox_direc_car
+                da[m] = direc_atual
             if central_statecar == 2:
                 aux4 +=1
-                if aux4 == 10:
+                if aux4 == 50:
                     status = 0
-                    flag = 0
+                    flag = -1
                     aux4 = 0
-            image2, posicoes[m], da[m], pd[m], velocidade, estacionado = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status, estacionado)
-            msg = str(status) + '/' + str(posicoes[m][0]) + '/' + str(posicoes[m][1]) + '/' + str(velocidade)
+            if m in aux3:
+                # mudar p/ 1
+                if m != id_carro:
+                    status = 0
+            else:
+                if m != id_carro:
+                    status = 0
+            if status == 2:
+                image2, posicoes[m], da[m], pd[m], velocidade, estacionado = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status, estacionado, flag)
+            else:
+                image2, posicoes[m], da[m], pd[m], velocidade = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status, estacionado, flag)
+                if flag == -1:
+                    flag = 0
+            msg = str(status) + '/' + str(posicoes[m][0]) + '/' + str(posicoes[m][1]) + '/' + str(velocidade) + '/' + str(pd[m])
+            print(msg)
             topico =  'transporte/carro' + str(m)
             clients[m].publish(topico, msg)
     aux+=1    
@@ -172,7 +188,7 @@ while 1:
             teste = 0
         else:
             teste = 1
-    time.sleep(0.2)
+    time.sleep(0.5)
 cv2.destroyAllWindows()
 j = 0
 for client in clients:

@@ -165,7 +165,7 @@ class carro:
     def __init__(self, ID, placa):
         self.ID = ID
         self.placa = placa
-    def movimento_carro(self, image2, matriz_cidade, atual, direcao_atual, prox_direcao, velocidade, status, estacionado):
+    def movimento_carro(self, image2, matriz_cidade, atual, direcao_atual, prox_direcao, velocidade, status, estacionado, flag):
         X_MAX, Y_MAX = np.shape(matriz_cidade)
         anterior = atual
         x = atual[0]
@@ -174,8 +174,9 @@ class carro:
         if status == 2:
             atual, estacionado = estacionar(image2, atual, matriz_cidade, X_MAX, Y_MAX)
             return image2, atual, direcao_atual, prox_direcao, velocidade, estacionado
-        elif status == 3:
-            image2 = cv2.circle(image2, (matriz_cidade[estacionado[0]][estacionado[1]][0], matriz_cidade[estacionado[0]][estacionado[1]][1]), 10, (0, 0, 0), -1)
+        elif status == 3 or flag == -1:
+            print(estacionado)
+            image2 = cv2.circle(image2, (estacionado[0], estacionado[1]), 10, (0, 0, 0), -1)
         if velocidade == 0:
             velocidade = 0
         #Mover o carro para direita do mapa
@@ -374,8 +375,7 @@ class carro:
             elif(x == (X_MAX-1)):
                 prox_direcao = 0
                 direcao_atual = 0
-        estacionado = (-1,-1)
-        return image2, atual, direcao_atual, prox_direcao, velocidade, estacionado
+        return image2, atual, direcao_atual, prox_direcao, velocidade
 # =============================================================================
 # Movimentar carro no mapa
 # =============================================================================
@@ -408,40 +408,40 @@ def estacionar(image2, atual, matriz_cidade, X_MAX, Y_MAX):
     if x == 0:
         image2 = cv2.circle(image2, (matriz_cidade[x][y][0], matriz_cidade[x][y][1]-30), 10, cor(2), -1)
         estacionado = (matriz_cidade[x][y][0],matriz_cidade[x][y][1]-30)
-    elif x == (len(X_MAX)-1):
+    elif x == (X_MAX-1):
         image2 = cv2.circle(image2, (matriz_cidade[x][y][0], matriz_cidade[x][y][1]+30), 10, cor(2), -1)
         estacionado = (matriz_cidade[x][y][0],matriz_cidade[x][y][1]+30)
     elif y == 0:
         image2 = cv2.circle(image2, (matriz_cidade[x][y][0]-30, matriz_cidade[x][y][1]), 10, cor(2), -1)
         estacionado = (matriz_cidade[x][y][0]-30,matriz_cidade[x][y][1])
-    elif y == (len(Y_MAX)-1):
+    elif y == (Y_MAX-1):
         image2 = cv2.circle(image2, (matriz_cidade[x][y][0]+30, matriz_cidade[x][y][1]), 10, cor(2), -1)
         estacionado = (matriz_cidade[x][y][0]+30,matriz_cidade[x][y][1])
     else:
         if matriz_cidade[x-1][y] == (-1, -1):
-            image2 = cv2.circle(image2, (matriz_cidade[x-1][y][0], matriz_cidade[x-1][y][1]), 10, cor(2), -1)
-            estacionado = (matriz_cidade[x-1][y][0],matriz_cidade[x-1][y][1])
+            image2 = cv2.circle(image2, (matriz_cidade[x][y][0]-30, matriz_cidade[x][y][1]), 10, cor(2), -1)
+            estacionado = (matriz_cidade[x][y][0]-30,matriz_cidade[x][y][1])
         elif matriz_cidade[x][y-1] == (-1, -1):
-            image2 = cv2.circle(image2, (matriz_cidade[x][y-1][0], matriz_cidade[x][y-1][1]), 10, cor(2), -1)
-            estacionado = (matriz_cidade[x][y-1][0],matriz_cidade[x][y-1][1])
+            image2 = cv2.circle(image2, (matriz_cidade[x][y][0], matriz_cidade[x][y][1]-30), 10, cor(2), -1)
+            estacionado = (matriz_cidade[x][y][0],matriz_cidade[x][y][1]-30)
         elif matriz_cidade[x][y+1] == (-1, -1):
-            image2 = cv2.circle(image2, (matriz_cidade[x][y+1][0], matriz_cidade[x][y+1][1]), 10, cor(2), -1)
-            estacionado = (matriz_cidade[x][y+1][0], matriz_cidade[x][y+1][1])
+            image2 = cv2.circle(image2, (matriz_cidade[x][y][0], matriz_cidade[x][y][1]+30), 10, cor(2), -1)
+            estacionado = (matriz_cidade[x][y][0], matriz_cidade[x][y][1]+30)
         elif matriz_cidade[x+1][y] == (-1, -1):
-            image2 = cv2.circle(image2, (matriz_cidade[x+1][y][0], matriz_cidade[x+1][y][1]), 10, cor(2), -1)
-            estacionado = (matriz_cidade[x+1][y][0], matriz_cidade[x+1][y][1])
+            image2 = cv2.circle(image2, (matriz_cidade[x][y][0]+30, matriz_cidade[x][y][1]), 10, cor(2), -1)
+            estacionado = (matriz_cidade[x][y][0]+30, matriz_cidade[x][y][1])
         elif matriz_cidade[x-1][y-1] == (-1, -1):
-            image2 = cv2.circle(image2, (matriz_cidade[x-1][y-1][0], matriz_cidade[x-1][y-1][1]), 10, cor(2), -1)
-            estacionado = (matriz_cidade[x-1][y-1][0], matriz_cidade[x-1][y-1][1])
+            image2 = cv2.circle(image2, (matriz_cidade[x][y-1][0]-30, matriz_cidade[x][y-1][1]), 10, cor(2), -1)
+            estacionado = (matriz_cidade[x][y-1][0]-30, matriz_cidade[x][y-1][1])
         elif matriz_cidade[x-1][y+1] == (-1, -1):
-            image2 = cv2.circle(image2, (matriz_cidade[x-1][y+1][0], matriz_cidade[x-1][y+1][1]), 10, cor(2), -1)
-            estacionado = (matriz_cidade[x-1][y+1][0], matriz_cidade[x-1][y+1][1])
+            image2 = cv2.circle(image2, (matriz_cidade[x][y+1][0]-30, matriz_cidade[x][y+1][1]), 10, cor(2), -1)
+            estacionado = (matriz_cidade[x][y+1][0]-30, matriz_cidade[x][y+1][1])
         elif matriz_cidade[x+1][y-1] == (-1, -1):
-            image2 = cv2.circle(image2, (matriz_cidade[x+1][y-1][0], matriz_cidade[x+1][y-1][1]), 10, cor(2), -1)
-            estacionado = (matriz_cidade[x+1][y-1][0], matriz_cidade[x+1][y-1][1])
+            image2 = cv2.circle(image2, (matriz_cidade[x][y-1][0]+30, matriz_cidade[x][y-1][1]), 10, cor(2), -1)
+            estacionado = (matriz_cidade[x][y-1][0]+30, matriz_cidade[x][y-1][1])
         elif matriz_cidade[x+1][y+1] == (-1, -1):
-            image2 = cv2.circle(image2, (matriz_cidade[x+1][y+1][0], matriz_cidade[x+1][y+1][1]), 10, cor(2), -1)
-            estacionado = (matriz_cidade[x+1][y+1][0], matriz_cidade[x+1][y+1][1])
+            image2 = cv2.circle(image2, (matriz_cidade[x][y+1][0]+30, matriz_cidade[x][y+1][1]), 10, cor(2), -1)
+            estacionado = (matriz_cidade[x][y+1][0]+30, matriz_cidade[x][y+1][1])
     return atual, estacionado
 # =============================================================================
 # Criando carros
@@ -503,6 +503,8 @@ def proxima(proxima_direcao, posicoes, ID, atual):
                 break
             else:
                 velocidade = 1
+    else:
+        velocidade = 1
     return velocidade
 # =============================================================================
 
