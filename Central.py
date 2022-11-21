@@ -31,6 +31,11 @@ iniciou = 0
 pd = 0
 cliente = 'central'
 aux = 0
+aux1 = 0
+n_carros = 0
+subs = 0
+id_carro = -2
+recebido = 0
 
 #Function to show the log
 def on_log(client, userdata, level, buf):
@@ -78,6 +83,10 @@ def salva_msg(mensagem, topico):
     global iniciou
     global pd
     global cliente
+    global ncarros
+    global recebido
+    if recebido == 0:
+         recebido = 1
     msg = mensagem.split('/')
     topic = topico.split('/')
     topic = topic[1]
@@ -129,68 +138,63 @@ def salva_msg(mensagem, topico):
     arquivo.write(mensagem + "\n")
     arquivo.close()
  
-def mover_carro(x_viagem, y_viagem, x_atual, y_atual):
+def mover_carro(x_viagem, y_viagem, x_atual, y_atual, carro_em_uso):
     global pd
     global flag
-    if x_viagem % 2 == 0:
-        if(x_atual < x_viagem):
-            if pd <=1:
+    global aux1
+    
+    # if x_viagem % 2 == 0:
+        # print('ou aqui')
+    if aux1 == 0:
+        print('olhando x', aux1)
+    elif aux1 == 1:
+        print('olhando y', aux1)
+    if aux1 == 0:
+        if(x_viagem > x_atual):
+            if pd == 0:
+                direc_atual = 2
+            elif pd == 1:
                 direc_atual = 2
             elif pd == 2:
                 direc_atual = 2
             elif pd == 3:
                 direc_atual = 0
-        elif x_atual > x_viagem:
-            if pd <=1:
+            return direc_atual
+        elif x_viagem < x_atual:
+            if pd == 0:
+                direc_atual = 1
+            elif pd == 1:
                 direc_atual = 1
             elif pd == 2:
                 direc_atual = 0
             elif pd == 3:
                 direc_atual = 1
-        elif y_atual < y_viagem:
+            return direc_atual
+        if x_atual == x_viagem:
+            aux1 = 1
+    if aux1 == 1:
+        if y_viagem > y_atual:
             if pd == 0:
                 direc_atual = 0
             elif pd == 1:
-                direc_atual = 3
-            elif pd >= 2:
-                direc_atual = 1
-        elif y_atual > y_viagem:
-            if pd == 0:
-                direc_atual = 1
-            elif pd == 1:
-                direc_atual = 0
-            elif pd >= 2:
                 direc_atual = 2
-    elif x_viagem % 2 == 1:
-        print('aqui')
-        if y_atual < y_viagem:
-            if pd == 0:
-                direc_atual = 0
-            elif pd == 1:
-                direc_atual = 3
-            elif pd >= 2:
+            elif pd == 2:
                 direc_atual = 1
-        elif y_atual > y_viagem:
+            elif pd == 3:
+                direc_atual = 1
+            return direc_atual
+        elif y_viagem < y_atual:
             if pd == 0:
                 direc_atual = 1
             elif pd == 1:
                 direc_atual = 0
-            elif pd >= 2:
-                direc_atual = 2
-        elif(x_atual < x_viagem):
-            if pd <=1:
-                direc_atual = 2
             elif pd == 2:
                 direc_atual = 2
             elif pd == 3:
-                direc_atual = 0
-        elif x_atual > x_viagem:
-            if pd <=1:
-                direc_atual = 1
-            elif pd == 2:
-                direc_atual = 0
-            elif pd == 3:
-                direc_atual = 1
+                direc_atual = 2
+            return direc_atual
+        if y_atual == y_viagem:    
+            aux1 = 0
     if x_atual == x_viagem and y_atual == y_viagem:
         if flag == 2:
             flag = 3
@@ -198,25 +202,25 @@ def mover_carro(x_viagem, y_viagem, x_atual, y_atual):
         elif flag == 5:
             flag = 6
             return 4
-    return direc_atual
+    return 4
 
 #Brokers address
 broker_address =    'test.mosquitto.org'
 broker_address =    'broker.emqx.io'
 
-client = mqtt.Client("Central")
+client = mqtt.Client("Central6")
 client.on_connect = on_connect
 client.on_disconnect= on_disconnect
 #client.on_log = on_log
 client.on_message = on_message
 client.connect(broker_address)
 client.loop_start()
-    
-# time.sleep(2)
-cv2.namedWindow('Central', cv2.WINDOW_AUTOSIZE)
+
 for j in range(10):
     tp = 'transporte/carro' + str(j)
-    client.subscribe(tp,1)
+    client.subscribe(tp,1)    
+# time.sleep(2)
+cv2.namedWindow('Central', cv2.WINDOW_AUTOSIZE)
 client.subscribe("transporte/usuario0",1)
 client.subscribe("transporte/inicio",1)
 while 1:
@@ -229,84 +233,92 @@ while 1:
             top = 'transporte/central_carro'
             menssage = '-2/0/0'
             client.publish(top, menssage)
-        if flag == 1:
-            aux = 0
-            if x_viagem < X_MAX and y_viagem < Y_MAX:
-                for j in range(0, len(status)):
-                    if status[j] == 0:
-                        carro_em_uso = j
-                        break
+        elif iniciou == 1:
+            if subs == 0:
+                for j in range(n_carros):
+                    tp = 'transporte/carro' + str(j)
+                    client.subscribe(tp,1)
+            subs = 1
+        if recebido == 1:
+            recebido = 0
+            if flag == 1:
+                aux = 0
+                if x_viagem < X_MAX and y_viagem < Y_MAX:
+                    for j in range(0, len(status)):
+                        if status[j] == 0:
+                            carro_em_uso = j
+                            break
+                    while aux == 0:
+                        if id_carro == carro_em_uso:
+                            if cliente == 'carro':
+                                x_atual = x
+                                y_atual = y
+                                client.publish("transporte/central_usuario", '0')
+                                top = 'transporte/central_carro'
+                                menssage = str(carro_em_uso) + '/2/0'
+                                client.publish(top, menssage)
+                                flag = 2
+                                aux = 1
+                        else:
+                            # if keyboard.read_key() == "m":
+                            if key == 109:
+                                client.publish("transporte/central_usuario", '4')
+                                top = 'transporte/central_carro'
+                                menssage = str(carro_em_uso) + '/2/0'
+                                client.publish(top, menssage)
+                                aux = 1
+                tipo = 5
+            if flag == 2:
+                aux = 0
+                while aux == 0 :
+                    if id_carro == carro_em_uso:
+                        if cliente == 'carro':
+                            x_atual = x
+                            y_atual = y
+                            direcao_atual = mover_carro(x_viagem, y_viagem, x_atual, y_atual, carro_em_uso)
+                            top = 'transporte/central_carro'
+                            menssage = str(carro_em_uso) + '/3/' + str(direcao_atual)
+                            client.publish(top, menssage)
+                            aux = 1
+            if flag == 3:
+                client.publish("transporte/central_usuario", '1')
+                top = 'transporte/central_carro'
+                menssage = str(carro_em_uso) + '/2/0'
+                client.publish(top, menssage)
+                flag = 4
+            if flag == 4:
+                if tipo == 1:
+                    if x_viagem < X_MAX and y_viagem < Y_MAX:
+                        client.publish("transporte/central_usuario", '2')
+                    else:
+                        client.publish("transporte/central_usuario", '4')
+                        top = 'transporte/central_carro'
+                        menssage = str(carro_em_uso) + '/2/0'
+                        client.publish(top, menssage)
+                    tipo = 5
+                    flag = 5
+            if flag == 5:
+                aux = 0
                 while aux == 0:
                     if id_carro == carro_em_uso:
                         if cliente == 'carro':
                             x_atual = x
                             y_atual = y
-                            client.publish("transporte/central_usuario", '0')
+                            direcao_atual = mover_carro(x_viagem, y_viagem, x_atual, y_atual, carro_em_uso)
                             top = 'transporte/central_carro'
-                            menssage = str(carro_em_uso) + '/2/0'
-                            client.publish(top, menssage)
-                            flag = 2
-                            aux = 1
-                    else:
-                        # if keyboard.read_key() == "m":
-                        if key == 109:
-                            client.publish("transporte/central_usuario", '4')
-                            top = 'transporte/central_carro'
-                            menssage = str(carro_em_uso) + '/2/0'
+                            menssage = str(carro_em_uso) + '/3/' + str(direcao_atual)
                             client.publish(top, menssage)
                             aux = 1
-            tipo = 5
-        if flag == 2:
-            aux = 0
-            while aux == 0 :
-                if id_carro == carro_em_uso:
-                    if cliente == 'carro':
-                        x_atual = x
-                        y_atual = y
-                        direcao_atual = mover_carro(x_viagem, y_viagem, x_atual, y_atual)
-                        top = 'transporte/central_carro'
-                        menssage = str(carro_em_uso) + '/3/' + str(direcao_atual)
-                        client.publish(top, menssage)
-                        aux = 1
-        if flag == 3:
-            client.publish("transporte/central_usuario", '1')
-            top = 'transporte/central_carro'
-            menssage = str(carro_em_uso) + '/2/0'
-            client.publish(top, menssage)
-            flag = 4
-        if flag == 4:
-            if tipo == 1:
-                if x_viagem < X_MAX and y_viagem < Y_MAX:
-                    client.publish("transporte/central_usuario", '2')
-                else:
-                    client.publish("transporte/central_usuario", '4')
-                    top = 'transporte/central_carro'
-                    menssage = str(carro_em_uso) + '/2/0'
-                    client.publish(top, menssage)
-                tipo = 5
-                flag = 5
-        if flag == 5:
-            aux = 0
-            while aux == 0:
-                if id_carro == carro_em_uso:
-                    if cliente == 'carro':
-                        x_atual = x
-                        y_atual = y
-                        direcao_atual = mover_carro(x_viagem, y_viagem, x_atual, y_atual)
-                        top = 'transporte/central_carro'
-                        menssage = str(carro_em_uso) + '/3/' + str(direcao_atual)
-                        client.publish(top, menssage)
-                        aux = 1
-        if flag == 6:
-            client.publish("transporte/central_usuario", '3')
-            top = 'transporte/central_carro'
-            menssage = str(carro_em_uso) + '/2/0'
-            client.publish(top, menssage)
-            flag = 0
-        if flag == 7:
-            # if (keyboard.read_key() == "e"):
-            if key == 101:
-                break
+            if flag == 6:
+                client.publish("transporte/central_usuario", '3')
+                top = 'transporte/central_carro'
+                menssage = str(carro_em_uso) + '/2/0'
+                client.publish(top, menssage)
+                flag = 0
+            if flag == 7:
+                # if (keyboard.read_key() == "e"):
+                if key == 101:
+                    break
         # Checks if the 'p' button for Pub was pressed and if it is not disconnected, if so it makes pub
         # if (keyboard.read_key() == "p"):
         if key == 112:
@@ -319,7 +331,7 @@ while 1:
             client.publish("transporte/central_usuario", '4')
             break
         
-    time.sleep(0.4)
+    time.sleep(0.1)
         
 cv2.destroyAllWindows()      
 print("Disconnecting Central") 

@@ -8,7 +8,6 @@ Created on Tue Oct 25 07:44:07 2022
 import paho.mqtt.client as mqtt
 import keyboard
 import time
-import cv2
 
 #Global variables
 first = 0
@@ -17,6 +16,7 @@ disc  = 1
 viagem =  'n'
 status = 5
 topico = 'transporte/usuario0'
+recebido = 0
 
 #Function to show the log
 def on_log(client, userdata, level, buf):
@@ -50,6 +50,9 @@ def on_message(client, userdata, msg):
 
 def salva_msg(mensagem, topico):
     global status
+    global recebido
+    if recebido == 0:
+         recebido = 1
     status = int(mensagem)
 
 #Brokers address
@@ -86,47 +89,48 @@ while 1:
         elif keyboard.read_key() == "f":
             break
         while viagem == 'aguardando':
-            cv2.waitKey(1)
-            if flag == 0:
-                print('Aguardando retorno da central...')
-                flag = 1
-            if keyboard.read_key() == "u":
-                print('Cancelamento de viagem solicitado')
-                msg = '2/0/0'
-                client.publish(topico, msg)
-            elif keyboard.read_key() == "q":
-                viagem = 'n'
-                break
-            else:
-                if status == 4:
-                    print('Viagem cancelada')
-                    status = 5
-                    viagem = 'n'
-                    break
-                elif status == 0:
-                    if flag == 1:
-                        print('Viagem confirmada pela central')
-                        print('Aguarde no local de partida')
-                        flag = 2
-                        status = 5
-                elif status == 1:
-                    print('Carro chegou no local de partida')
-                    print('Envie o local de destino: ')
-                    x = int(input('x: '))
-                    y = int(input('y: '))
-                    msg = str(1) + '/' + str(x) + '/' + str(y)
+            if recebido == 1:
+                recebido = 0
+                if flag == 0:
+                    print('Aguardando retorno da central...')
+                    flag = 1
+                if keyboard.read_key() == "u":
+                    print('Cancelamento de viagem solicitado')
+                    msg = '2/0/0'
                     client.publish(topico, msg)
-                    flag = 0
-                    status = 5
-                elif status == 2:
-                    print('Destino confirmado pela central')
-                    flag = 0
-                    status = 5
-                elif status == 3:
-                    print('Você chegou ao seu destino')
+                elif keyboard.read_key() == "q":
                     viagem = 'n'
                     break
-                    status = 5
+                else:
+                    if status == 4:
+                        print('Viagem cancelada')
+                        status = 5
+                        viagem = 'n'
+                        break
+                    elif status == 0:
+                        if flag == 1:
+                            print('Viagem confirmada pela central')
+                            print('Aguarde no local de partida')
+                            flag = 2
+                            status = 5
+                    elif status == 1:
+                        print('Carro chegou no local de partida')
+                        print('Envie o local de destino: ')
+                        x = int(input('x: '))
+                        y = int(input('y: '))
+                        msg = str(1) + '/' + str(x) + '/' + str(y)
+                        client.publish(topico, msg)
+                        flag = 0
+                        status = 5
+                    elif status == 2:
+                        print('Destino confirmado pela central')
+                        flag = 0
+                        status = 5
+                    elif status == 3:
+                        print('Você chegou ao seu destino')
+                        viagem = 'n'
+                        break
+                        status = 5
         if keyboard.read_key() == "d":        
             break
         

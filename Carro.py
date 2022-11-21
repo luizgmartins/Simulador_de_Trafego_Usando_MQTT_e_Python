@@ -83,7 +83,7 @@ def salva_msg(mensagem, topico):
 # broker_address =    'test.mosquitto.org'
 broker_address =    'broker.emqx.io'
 clients=[]
-nclients= 1
+nclients= 2
 for i  in range(nclients):
     cname="Carros_"+str(i)
     print("Creating new instance for " + cname +"...")
@@ -132,7 +132,10 @@ while 1:
         rd.shuffle(aux2)
         aux3 = aux2[0: int(len(carros)*0.6)]
         for q in range(len(pd)):
-            pd[q] = rd.randint(0,3)
+            if flag == 1 and q == id_carro:
+                nda = 1
+            else:
+                pd[q] = rd.randint(0,3)
         aux7=0
     if aux == 5:
         for p in range(len(da)):
@@ -153,10 +156,12 @@ while 1:
                     status = 0
                     flag = -1
                     aux4 = 0
+            else:
+                aux4 = 0
             if m in aux3:
                 # mudar p/ 1
                 if m != id_carro:
-                    status = 0
+                    status = 1
             else:
                 if m != id_carro:
                     status = 0
@@ -167,7 +172,7 @@ while 1:
                 if flag == -1:
                     flag = 0
             msg = str(status) + '/' + str(posicoes[m][0]) + '/' + str(posicoes[m][1]) + '/' + str(velocidade) + '/' + str(pd[m])
-            print(msg)
+            # print(msg)
             topico =  'transporte/carro' + str(m)
             clients[m].publish(topico, msg)
     aux+=1    
