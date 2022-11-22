@@ -10,6 +10,7 @@ import paho.mqtt.client as mqtt
 # import keyboard
 import time
 import cv2
+from datetime import datetime
 
 path = r'Imagens\central.png'
 image = cv2.imread(path)
@@ -36,6 +37,7 @@ n_carros = 0
 subs = 0
 id_carro = -2
 recebido = 0
+posicoes = []
 
 #Function to show the log
 def on_log(client, userdata, level, buf):
@@ -85,6 +87,7 @@ def salva_msg(mensagem, topico):
     global cliente
     global ncarros
     global recebido
+    global posicoes
     if recebido == 0:
          recebido = 1
     msg = mensagem.split('/')
@@ -104,38 +107,45 @@ def salva_msg(mensagem, topico):
         else:
             flag = 7
     elif iniciou == 1:
-        x = int(msg[1])
-        y = int(msg[2])
-        if aux[0] == 'carr':
-            cliente = 'carro'
-            id_carro = int(aux[1])
-            if id_carro != carro_em_uso:
-                status[id_carro] = int(msg[0])
-            velocidade = int(msg[3])
-            pd = int(msg[4])
-        elif aux[0] == 'usuari':
-            cliente = 'usuario'
-            tipo = int(msg[0])
-        if cliente == 'usuario':
-            if tipo == 0:
-                x_viagem = int(x)
-                y_viagem = int(y)
-                flag = 1
-                tipo = 5
-            elif tipo == 1:
-                x_viagem = int(x)
-                y_viagem = int(y)
-            elif tipo == 2:
-                client.publish("transporte/central_usuario", '4')
-                top = 'transporte/central_carro'
-                menssage = str(carro_em_uso) + '/2/0'
-                client.publish(top, menssage)
-                flag = 0
-                tipo = 5
+        if aux[0] == 'matriz':
+            msg.pop(-1)
+            posicoes = msg
+        else:
+            x = int(msg[1])
+            y = int(msg[2])
+            if aux[0] == 'carr':
+                cliente = 'carro'
+                id_carro = int(aux[1])
+                if id_carro != carro_em_uso:
+                    status[id_carro] = int(msg[0])
+                velocidade = int(msg[3])
+                pd = int(msg[4])
+            elif aux[0] == 'usuari':
+                cliente = 'usuario'
+                tipo = int(msg[0])
+            if cliente == 'usuario':
+                if tipo == 0:
+                    x_viagem = int(x)
+                    y_viagem = int(y)
+                    flag = 1
+                    tipo = 5
+                elif tipo == 1:
+                    x_viagem = int(x)
+                    y_viagem = int(y)
+                elif tipo == 2:
+                    client.publish("transporte/central_usuario", '4')
+                    top = 'transporte/central_carro'
+                    menssage = str(carro_em_uso) + '/2/0'
+                    client.publish(top, menssage)
+                    flag = 0
+                    tipo = 5
             
     arq_name = 'Historico/' + str(topic) + '.txt'
     arquivo = open(arq_name,'a')
-    arquivo.write(mensagem + "\n")
+    data_e_hora_em_texto = datetime.now().strftime('%d/%m/%Y %H:%M')
+    info =  data_e_hora_em_texto + ' ' + mensagem + '\n'
+    arquivo.write(info + "\n")
+    # arquivo.write(mensagem + "\n")
     arquivo.close()
  
 def mover_carro(x_viagem, y_viagem, x_atual, y_atual, carro_em_uso):
@@ -145,10 +155,10 @@ def mover_carro(x_viagem, y_viagem, x_atual, y_atual, carro_em_uso):
     
     # if x_viagem % 2 == 0:
         # print('ou aqui')
-    if aux1 == 0:
-        print('olhando x', aux1)
-    elif aux1 == 1:
-        print('olhando y', aux1)
+    # if aux1 == 0:
+    #     print('olhando x', aux1)
+    # elif aux1 == 1:
+    #     print('olhando y', aux1)
     if aux1 == 0:
         if(x_viagem > x_atual):
             if pd == 0:
@@ -223,10 +233,11 @@ for j in range(10):
 cv2.namedWindow('Central', cv2.WINDOW_AUTOSIZE)
 client.subscribe("transporte/usuario0",1)
 client.subscribe("transporte/inicio",1)
+client.subscribe('transporte/matrizo',1)
 while 1:
     cv2.imshow('Central', image)
     key = cv2.waitKey(1)
-    client.subscribe("transporte/usuario0",1)
+    # client.subscribe("transporte/usuario0",1)
     #Check if you are connected
     if conec == 1:
         if iniciou == 0:
@@ -243,7 +254,9 @@ while 1:
             recebido = 0
             if flag == 1:
                 aux = 0
-                if x_viagem < X_MAX and y_viagem < Y_MAX:
+                verificacao = '(' + str(x_viagem) + ',' + str(y_viagem) + ')'
+                # if x_viagem < X_MAX and y_viagem < Y_MAX:
+                if verificacao in posicoes:
                     for j in range(0, len(status)):
                         if status[j] == 0:
                             carro_em_uso = j
@@ -267,6 +280,9 @@ while 1:
                                 menssage = str(carro_em_uso) + '/2/0'
                                 client.publish(top, menssage)
                                 aux = 1
+                else:
+                    client.publish("transporte/central_usuario", '6')
+                    flag = 0
                 tipo = 5
             if flag == 2:
                 aux = 0
@@ -288,15 +304,18 @@ while 1:
                 flag = 4
             if flag == 4:
                 if tipo == 1:
-                    if x_viagem < X_MAX and y_viagem < Y_MAX:
+                    verificacao = '(' + str(x_viagem) + ',' + str(y_viagem) + ')'
+                    if verificacao in posicoes:
+                    # if x_viagem < X_MAX and y_viagem < Y_MAX:
                         client.publish("transporte/central_usuario", '2')
+                        flag = 5
                     else:
-                        client.publish("transporte/central_usuario", '4')
+                        client.publish("transporte/central_usuario", '6')
                         top = 'transporte/central_carro'
                         menssage = str(carro_em_uso) + '/2/0'
                         client.publish(top, menssage)
+                        flag = 0
                     tipo = 5
-                    flag = 5
             if flag == 5:
                 aux = 0
                 while aux == 0:

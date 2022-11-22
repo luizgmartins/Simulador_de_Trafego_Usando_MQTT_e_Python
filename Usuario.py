@@ -107,6 +107,12 @@ while 1:
                         status = 5
                         viagem = 'n'
                         break
+                    elif status == 6:
+                        print('Parâmetro inválido')
+                        print('Viagem cancelada')
+                        status = 5
+                        viagem = 'n'
+                        break
                     elif status == 0:
                         if flag == 1:
                             print('Viagem confirmada pela central')

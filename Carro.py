@@ -33,6 +33,8 @@ prox_direc_car = 0
 estacionado = (-1,-1)
 id_carro = -1
 direc_atual = 0
+park = 0
+ult_pos = 0
 
 #Function to show the log
 def on_log(client, userdata, level, buf):
@@ -83,7 +85,7 @@ def salva_msg(mensagem, topico):
 # broker_address =    'test.mosquitto.org'
 broker_address =    'broker.emqx.io'
 clients=[]
-nclients= 2
+nclients= 20
 for i  in range(nclients):
     cname="Carros_"+str(i)
     print("Creating new instance for " + cname +"...")
@@ -99,11 +101,15 @@ for client in clients:
     
 # time.sleep(2)
 
-i = 0
 
 Cidade1, image, image2, window_name = mp.mapa_cidade(path, quarteirao=240)
 matriz_cidade, X_MAX, Y_MAX = mp.matriz_posicoes(Cidade1)
 posicoes, carros = mp.cria_carros(X_MAX, Y_MAX, matriz_cidade, quantidade=nclients)
+usuario_pos = ''
+for i in range(X_MAX):
+    for j in range(Y_MAX):
+        if matriz_cidade[i][j] != (-1,-1):
+            usuario_pos += '(' + str(i) + ',' + str(j) + ')' + '/'
 aux = 1
 da = []
 pd = []
@@ -128,6 +134,7 @@ while 1:
         id_carro = -1
         msg = str(X_MAX) + '/' + str(Y_MAX) + '/' + str(nclients) + '/0'
         clients[0].publish('transporte/inicio', msg)
+        clients[0].publish('transporte/matrizo', usuario_pos)
     if aux7 == 15:
         rd.shuffle(aux2)
         aux3 = aux2[0: int(len(carros)*0.6)]
@@ -152,7 +159,7 @@ while 1:
                 da[m] = direc_atual
             if central_statecar == 2:
                 aux4 +=1
-                if aux4 == 50:
+                if aux4 == 1000:
                     status = 0
                     flag = -1
                     aux4 = 0
@@ -166,8 +173,17 @@ while 1:
                 if m != id_carro:
                     status = 0
             if status == 2:
-                image2, posicoes[m], da[m], pd[m], velocidade, estacionado = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status, estacionado, flag)
+                if park == 0:
+                    image2, posicoes[m], da[m], pd[m], velocidade, estacionado = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status, estacionado, flag)
+                    ult_pos = posicoes[m]
+                    park = 1
+                else:
+                    posicoes[m] = (-1,-1)
             else:
+                if status == 3:
+                    park = 0
+                if posicoes[m] == (-1,-1):
+                    posicoes[m] = ult_pos
                 image2, posicoes[m], da[m], pd[m], velocidade = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status, estacionado, flag)
                 if flag == -1:
                     flag = 0
