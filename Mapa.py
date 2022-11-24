@@ -12,7 +12,6 @@ from random import randint
 import numpy as np
 
 path = r'C:\Workspace\Simulador_de_Trafego_Usando_MQTT_e_Python\Imagens\background_mapa.png'
-
 # =============================================================================
 #Criação da cidade, com ruas, quarteirões e limites externos
 # =============================================================================
@@ -471,7 +470,7 @@ def cria_carros(X_MAX, Y_MAX, matriz_cidade, quantidade):
                     break
     return posicoes, carros
 # =============================================================================
-# Se houver obstáculo o carro para até que possa seguir
+# Se houver obstaculo o carro para até que possa seguir
 # =============================================================================
 def proxima(proxima_direcao, posicoes, ID, atual):
     if proxima_direcao == 0:
@@ -506,4 +505,3 @@ def proxima(proxima_direcao, posicoes, ID, atual):
         velocidade = 1
     return velocidade
 # =============================================================================
-

@@ -4,46 +4,34 @@ Created on Tue Oct 25 06:48:40 2022
 
 @author: luizg
 """
-
-#Required libraries
+# =============================================================================
+# Required libraries
+# =============================================================================
 import paho.mqtt.client as mqtt
-# import keyboard
 import time
 import cv2
 from datetime import datetime
-
+# =============================================================================
+# Global variables
+# =============================================================================
 path = r'Imagens\central.png'
 image = cv2.imread(path)
-#Global variables
-first = 0
-conec = 0
-disc  = 1
-status = 0
-velocidade = 1
-x = 0
-y = 0
+first = conec = status = x = y = flag = X_MAX = Y_MAX = iniciou = pd = aux = aux1 = n_carros = subs = recebido = 0
+disc = velocidade = 1
 tipo = 5
-flag = 0
-X_MAX = 0
-Y_MAX = 0
 carro_em_uso = -1
 status = []
-iniciou = 0
-pd = 0
 cliente = 'central'
-aux = 0
-aux1 = 0
-n_carros = 0
-subs = 0
 id_carro = -2
-recebido = 0
 posicoes = []
-
-#Function to show the log
+# =============================================================================
+# Function to show the log
+# =============================================================================
 def on_log(client, userdata, level, buf):
     print("log: " + buf)
-    
-#Function to show you are connected
+# =============================================================================
+# Function to show you are connected
+# =============================================================================
 def on_connect(client, userdata, flags, rc):
     global conec
     global disc
@@ -53,8 +41,9 @@ def on_connect(client, userdata, flags, rc):
         print("Connected OK")
     else:
         print("Bad connection Returned code= ", rc)
-
-#Function to show you are disconnected
+# =============================================================================
+# Function to show you are disconnected
+# =============================================================================
 def on_disconnect(client, userdata, flags, rc=0):
     global first
     global conec
@@ -63,13 +52,15 @@ def on_disconnect(client, userdata, flags, rc=0):
     conec = 0
     disc  = 1
     print("Disconnected OK")
-
-#Function to print the received message
+# =============================================================================
+# Function to print the received message
+# =============================================================================
 def on_message(client, userdata, msg):
-    # if id_carro == carro_em_uso:
-    #     print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
+    # print("Message received = '", str(msg.payload.decode("utf-8")), "'", "on topic '", msg.topic, "'")
     salva_msg(str(msg.payload.decode("utf-8")), str(msg.topic))
-
+# =============================================================================
+# Tratamento das mensagens recebidas de início, do carro e do usuário
+# =============================================================================
 def salva_msg(mensagem, topico):
     global status
     global x
@@ -93,9 +84,9 @@ def salva_msg(mensagem, topico):
     msg = mensagem.split('/')
     topic = topico.split('/')
     topic = topic[1]
-    aux = topic.split('o')
+    aux_msg = topic.split('o')
     if iniciou == 0:
-        if aux[0] == 'inici':
+        if aux_msg[0] == 'inici':
             X_MAX = int(msg[0])
             Y_MAX = int(msg[1])
             ncarros = int(msg[2])
@@ -107,20 +98,20 @@ def salva_msg(mensagem, topico):
         else:
             flag = 7
     elif iniciou == 1:
-        if aux[0] == 'matriz':
+        if aux_msg[0] == 'matriz':
             msg.pop(-1)
             posicoes = msg
         else:
             x = int(msg[1])
             y = int(msg[2])
-            if aux[0] == 'carr':
+            if aux_msg[0] == 'carr':
                 cliente = 'carro'
-                id_carro = int(aux[1])
+                id_carro = int(aux_msg[1])
                 if id_carro != carro_em_uso:
                     status[id_carro] = int(msg[0])
                 velocidade = int(msg[3])
                 pd = int(msg[4])
-            elif aux[0] == 'usuari':
+            elif aux_msg[0] == 'usuari':
                 cliente = 'usuario'
                 tipo = int(msg[0])
             if cliente == 'usuario':
@@ -139,26 +130,20 @@ def salva_msg(mensagem, topico):
                     client.publish(top, menssage)
                     flag = 0
                     tipo = 5
-            
     arq_name = 'Historico/' + str(topic) + '.txt'
     arquivo = open(arq_name,'a')
     data_e_hora_em_texto = datetime.now().strftime('%d/%m/%Y %H:%M')
     info =  data_e_hora_em_texto + ' ' + mensagem + '\n'
-    arquivo.write(info + "\n")
-    # arquivo.write(mensagem + "\n")
+    arquivo.write(info)
     arquivo.close()
- 
+# =============================================================================
+#  Função que seleciona qual a próxima direção para o carro seguir de acordo
+# com a localização enviada pelo usuário
+# =============================================================================
 def mover_carro(x_viagem, y_viagem, x_atual, y_atual, carro_em_uso):
     global pd
     global flag
     global aux1
-    
-    # if x_viagem % 2 == 0:
-        # print('ou aqui')
-    # if aux1 == 0:
-    #     print('olhando x', aux1)
-    # elif aux1 == 1:
-    #     print('olhando y', aux1)
     if aux1 == 0:
         if(x_viagem > x_atual):
             if pd == 0:
@@ -213,11 +198,14 @@ def mover_carro(x_viagem, y_viagem, x_atual, y_atual, carro_em_uso):
             flag = 6
             return 4
     return 4
-
-#Brokers address
-broker_address =    'test.mosquitto.org'
+# =============================================================================
+# Brokers address
+# =============================================================================
+# broker_address =    'test.mosquitto.org'
 broker_address =    'broker.emqx.io'
-
+# =============================================================================
+# Conectando a central ao broker
+# =============================================================================
 client = mqtt.Client("Central6")
 client.on_connect = on_connect
 client.on_disconnect= on_disconnect
@@ -225,21 +213,28 @@ client.on_disconnect= on_disconnect
 client.on_message = on_message
 client.connect(broker_address)
 client.loop_start()
-
+# =============================================================================
+# Faz as subs de cada carro, do usuário, de inicio e da matriz de posições
+# =============================================================================
 for j in range(10):
     tp = 'transporte/carro' + str(j)
     client.subscribe(tp,1)    
-# time.sleep(2)
-cv2.namedWindow('Central', cv2.WINDOW_AUTOSIZE)
 client.subscribe("transporte/usuario0",1)
 client.subscribe("transporte/inicio",1)
 client.subscribe('transporte/matrizo',1)
+# =============================================================================
+# Inicia uma janela do opencv
+# =============================================================================
+cv2.namedWindow('Central', cv2.WINDOW_AUTOSIZE)
+# =============================================================================
+# Loop principal
+# =============================================================================
 while 1:
     cv2.imshow('Central', image)
     key = cv2.waitKey(1)
-    # client.subscribe("transporte/usuario0",1)
     #Check if you are connected
     if conec == 1:
+        # Verifica se o sistema recebeu a mensagem de início dos carros
         if iniciou == 0:
             top = 'transporte/central_carro'
             menssage = '-2/0/0'
@@ -250,12 +245,14 @@ while 1:
                     tp = 'transporte/carro' + str(j)
                     client.subscribe(tp,1)
             subs = 1
+        # Roda a sequência cada vez que a central recebe alguma mensagem
         if recebido == 1:
             recebido = 0
+            # Flags são estados que a central processa a viagem
             if flag == 1:
                 aux = 0
                 verificacao = '(' + str(x_viagem) + ',' + str(y_viagem) + ')'
-                # if x_viagem < X_MAX and y_viagem < Y_MAX:
+                # Verifica se a posição (x,y) que o usuário enviou existe no mapa utilizado
                 if verificacao in posicoes:
                     for j in range(0, len(status)):
                         if status[j] == 0:
@@ -273,8 +270,8 @@ while 1:
                                 flag = 2
                                 aux = 1
                         else:
-                            # if keyboard.read_key() == "m":
-                            if key == 109:
+                            # Se a tecla 'c' for pressionada, cancela a viagem
+                            if key == 99:
                                 client.publish("transporte/central_usuario", '4')
                                 top = 'transporte/central_carro'
                                 menssage = str(carro_em_uso) + '/2/0'
@@ -306,7 +303,7 @@ while 1:
                 if tipo == 1:
                     verificacao = '(' + str(x_viagem) + ',' + str(y_viagem) + ')'
                     if verificacao in posicoes:
-                    # if x_viagem < X_MAX and y_viagem < Y_MAX:
+                    # Verifica se a posição (x,y) que o usuário enviou existe no mapa utilizado
                         client.publish("transporte/central_usuario", '2')
                         flag = 5
                     else:
@@ -335,23 +332,18 @@ while 1:
                 client.publish(top, menssage)
                 flag = 0
             if flag == 7:
-                # if (keyboard.read_key() == "e"):
-                if key == 101:
+                # Pressing the 'esc' key ends the connection
+                if key == 27:
+                    client.publish("transporte/central_usuario", '4')
                     break
-        # Checks if the 'p' button for Pub was pressed and if it is not disconnected, if so it makes pub
-        # if (keyboard.read_key() == "p"):
-        if key == 112:
-            # client.publish("transporte/carro0", "Solicitação " + str(i))
-            estado = input('Manda o estado aí doidão: ')
-            client.publish("transporte/central_usuario", estado)
-        # Pressing the d key ends the connection
-        # if keyboard.read_key() == "d":
-        if key == 100:
+        # Pressing the 'esc' key ends the connection
+        if key == 27:
             client.publish("transporte/central_usuario", '4')
             break
-        
     time.sleep(0.1)
-        
+# =============================================================================
+# Encerra a aplicação e desconecta a central    
+# =============================================================================
 cv2.destroyAllWindows()      
 print("Disconnecting Central") 
 client.loop_stop()
