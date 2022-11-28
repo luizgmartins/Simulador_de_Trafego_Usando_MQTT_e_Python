@@ -206,7 +206,7 @@ broker_address =    'broker.emqx.io'
 # =============================================================================
 # Conectando a central ao broker
 # =============================================================================
-client = mqtt.Client("Central6")
+client = mqtt.Client("Central")
 client.on_connect = on_connect
 client.on_disconnect= on_disconnect
 #client.on_log = on_log
@@ -277,6 +277,7 @@ while 1:
                                 menssage = str(carro_em_uso) + '/2/0'
                                 client.publish(top, menssage)
                                 aux = 1
+                                flag = 0
                 else:
                     client.publish("transporte/central_usuario", '6')
                     flag = 0
@@ -335,10 +336,12 @@ while 1:
                 # Pressing the 'esc' key ends the connection
                 if key == 27:
                     client.publish("transporte/central_usuario", '4')
+                    flag = 0
                     break
         # Pressing the 'esc' key ends the connection
         if key == 27:
             client.publish("transporte/central_usuario", '4')
+            flag = 0
             break
     time.sleep(0.1)
 # =============================================================================

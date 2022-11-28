@@ -83,7 +83,7 @@ broker_address =    'broker.emqx.io'
 # Conectando os n carros ao broker
 # =============================================================================
 clients=[]
-nclients= 20
+nclients= 30
 for i  in range(nclients):
     cname="Carros_"+str(i)
     print("Creating new instance for " + cname +"...")
@@ -170,7 +170,7 @@ while 1:
             # Se o carro estiver muito tempo estacionado ele retorna ao mapa
             if central_statecar == 2:
                 counter_parked +=1
-                if counter_parked == 1000:
+                if counter_parked == 1250:
                     status = 0
                     flag = -1
                     counter_parked = 0
@@ -196,6 +196,7 @@ while 1:
                     parked = 0
                 if posicoes[m] == (-1,-1):
                     posicoes[m] = ult_pos
+                    velocidade = mp.proxima(pd[m], posicoes, m, posicoes[m])
                 image2, posicoes[m], da[m], pd[m], velocidade = carros[m].movimento_carro(image2, matriz_cidade, posicoes[m], da[m], pd[m], velocidade, status, estacionado, flag)
                 if flag == -1:
                     flag = 0

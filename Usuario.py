@@ -129,7 +129,6 @@ while 1:
                         if flag == 1:
                             print('Viagem confirmada pela central')
                             print('Aguarde no local de partida')
-                            flag = 2
                             status = 5
                     elif status == 1:
                         print('Carro chegou no local de partida')
@@ -147,8 +146,14 @@ while 1:
                     elif status == 3:
                         print('Você chegou ao seu destino')
                         viagem = 'n'
-                        break
                         status = 5
+            elif keyboard.read_key() == "s":
+                print('Cancelamento de viagem solicitado')
+                msg = '2/0/0'
+                client.publish(topico, msg)
+                status = 5
+                flag = 0
+                break
         # Se pressionar 'esc', encerra a aplicação
         if keyboard.read_key() == "esc":        
             break
