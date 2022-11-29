@@ -17,13 +17,52 @@ import random as rd
 # Global variables
 # =============================================================================
 path = r'Imagens\background_mapa.png'
+path2 = r'Imagens\inicio.png'
+img = cv2.imread(path2)
 first = conec = flag = central_statecar = prox_direc_car = direc_atual = 0
 parked = ult_pos = startSimulacao = counter_pd = counter_parked = 0
 disc = count = 1
 estacionado = (-1,-1)
 id_carro = -1
-pd = [] #peoxima direção
+pd = [] #proxima direção
 da = [] #direção atual
+# =============================================================================
+# Inicializa valores da simulação
+# =============================================================================
+def nothing(x):
+    pass
+cv2.namedWindow('Inicio', cv2.WINDOW_NORMAL)
+cv2.createTrackbar('Q','Inicio',0,2,nothing)
+while(1):
+    cv2.imshow('Inicio',img)
+    k = cv2.waitKey(1) & 0xFF
+    # if press n
+    if k == 110:
+        break
+    q = cv2.getTrackbarPos('Q','Inicio')
+if k == 27:
+    cv2.destroyAllWindows()
+else:
+    cv2.destroyWindow('Inicio')
+    cv2.namedWindow('Inicio', cv2.WINDOW_AUTOSIZE)
+    if q == 0:
+        quarteirao = 240
+        cv2.createTrackbar('Carros','Inicio',0,30,nothing)
+    elif q == 1:
+        quarteirao = 120
+        cv2.createTrackbar('Carros','Inicio',0,40,nothing)
+    elif q == 2:
+        quarteirao = 60
+        cv2.createTrackbar('Carros','Inicio',0,60,nothing)
+    k = 0
+    img2 = np.zeros((1,200,3), np.uint8)
+    while (1):
+        cv2.imshow('Inicio',img2)
+        k = cv2.waitKey(1) & 0xFF
+        nclients = cv2.getTrackbarPos('Carros','Inicio')
+        if k == 110:
+            break
+cv2.destroyAllWindows()
 # =============================================================================
 # Function to show the log
 # =============================================================================
@@ -83,7 +122,7 @@ broker_address =    'broker.emqx.io'
 # Conectando os n carros ao broker
 # =============================================================================
 clients=[]
-nclients= 30
+# nclients= 30
 for i  in range(nclients):
     cname="Carros_"+str(i)
     print("Creating new instance for " + cname +"...")
@@ -99,7 +138,7 @@ for client in clients:
 # =============================================================================
 # Cria a cidade, a matriz de posições e cria os carros
 # =============================================================================
-Cidade1, image, image2, window_name = mp.mapa_cidade(path, quarteirao=240)
+Cidade1, image, image2, window_name = mp.mapa_cidade(path, quarteirao)
 matriz_cidade, X_MAX, Y_MAX = mp.matriz_posicoes(Cidade1)
 posicoes, carros = mp.cria_carros(X_MAX, Y_MAX, matriz_cidade, quantidade=nclients)
 # =============================================================================
