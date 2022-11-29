@@ -16,7 +16,7 @@ from datetime import datetime
 # =============================================================================
 path = r'Imagens\central.png'
 image = cv2.imread(path)
-first = conec = status = x = y = flag = X_MAX = Y_MAX = iniciou = pd = aux = aux1 = n_carros = subs = recebido = 0
+first = conec = status = x = y = flag = X_MAX = Y_MAX = iniciou = pd = aux = aux1 = ncarros = subs = recebido = 0
 disc = velocidade = 1
 tipo = 5
 carro_em_uso = -1
@@ -206,7 +206,7 @@ broker_address =    'broker.emqx.io'
 # =============================================================================
 # Conectando a central ao broker
 # =============================================================================
-client = mqtt.Client("Central")
+client = mqtt.Client("Central1")
 client.on_connect = on_connect
 client.on_disconnect= on_disconnect
 #client.on_log = on_log
@@ -241,7 +241,7 @@ while 1:
             client.publish(top, menssage)
         elif iniciou == 1:
             if subs == 0:
-                for j in range(n_carros):
+                for j in range(ncarros):
                     tp = 'transporte/carro' + str(j)
                     client.subscribe(tp,1)
             subs = 1
