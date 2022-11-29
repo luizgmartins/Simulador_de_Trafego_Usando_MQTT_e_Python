@@ -29,9 +29,28 @@ Para preencher o que falta é utilizado a mesma lógica, mas agora olhando as fa
 Como os carros estarão sempre no centro das posições, é possível saber exatamente onde o carro está, deslocar ele facilmente e impedir que ele entre nos quarteirões sem querer.
 
 ## Movimento dos carros
+Ao selecionar a quantidade inicial de carros esses serão criados como instâncias e conectados ao broker. No fim da simulação cada carro é desconectado ao broker. Cada carro também é criado como um objeto que possui uma ID de identificação e uma placa (Mas a placa não foi implementada com valores diferentes). O objeto carro possui uma função de deslocamento (movimento_carro).
+Para colocar os carros no mapa foi necessário criar uma cópia da imagem de fundo que estava em branco no início do script e foi utilizado para criar o mapa e suas cores são invertidas, assim é possível criar uma máscara contendo somente o que foi desenhado nela. No fim a imagem do mapa é subtraído dessa máscara contendo os carros, isso resulta em uma imagem contendo o mapa e os carros. Isso foi necessário para que o movimento dos carros não apagasse as linhas do mapa caso eles pudessem ser desenhados em cima de alguma linha.
+A lógica de movimento dos carros consiste em uma próxima direção, na direção atual, na velocidade do carro e sua posição anterior. A posição anterior é sempre a atual antes do próximo deslocamento do carro, assim é possível apagar o carro onde ele foi desenhado anteriormente para poder desenhá-lo na próxima posição do mapa. A velocidade do carro é 1 ou 0, caso seja 1 o carro desloca uma posição ou passo (que equivale a 30 pixels) e caso seja 0 ele fica parado. A velocidade é 0 sempre que a próxima direção que o carro irá seguir houver algum obstáculo, seja um carro ou alguma posição que ele não pode ir. As “próximas direções” dos carros possuem valores entre 0 e 3, sendo, próxima direção para direita, para esquerda, para cima e para baixo, respectivamente. As “direções atuais” podem ser valores entre 0 e 2, sendo direção atual igual a 0 para que o carro continue na mesma direção que ele está. Por exemplo, se a próxima direção dele é 0 (para direita) e a direção atual for 0 ele continua seguindo para direita. Tanto para próxima direção para direita ou para esquerda, as direções atuais, se tiverem valores 1 ou 2, irão fazer o carro ir para próxima direção para cima ou para baixo, respectivamente. Isto é, se a próxima direção for 1 (para esquerda), mas a direção atual for 1, o carro vai se movimentar para que assim que for possível começar a se deslocar para cima. 
+
+Tanto para próxima direção para cima ou para baixo as direções atuais, se tiverem valores 1 ou 2, irão fazer o carro ir para próxima direção para direita ou para esquerda, respectivamente. Isto é, se a próxima direção for 2 (para cima), mas a direção atual for 1, o carro vai se movimentar para que assim que for possível começar a se deslocar para direita.
+
+O movimento do carro também verifica se chegou aos limites do mapa ou se o carro irá entrar em um quarteirão. Nesses casos o carro deve ir para uma outra direção válida.
+
+Para estacionar o carro quando ele chega a uma posição de destino ele observa se está em alguma das faixas próximas aos limites do mapa e estaciona fora do mapa. Caso ele esteja próximo a um quarteirão, ele vai procurar o primeiro lugar ao redor dele que tem coordenada (-1,-1) e parar lá. A última posição válida dele no mapa é salva para quando ele retornar ao mapa e sua posição de estacionado também é salva para que seja possível apagar ela quando o carro retornar ao mapa.
+
+Os carros possuem 4 estados (valores de 0 a 3), estando livres, ocupados, estacionados ou em uso pela central. Cada um desses estados faz com que o carro assuma uma cor diferente no mapa. Então, as cores utilizadas para os estados foram, preto, vermelho, azul e verde, respectivamente.
+
+Os carros possuem inicialmente uma posição aleatória no mapa e as próximas direções e direções atuais são geradas aleatoriamente para os carros que não estão em uso pela central. O status do carro é definido inicialmente para 60% dos carros estiverem ocupados e 40% livres para uso da central. A cada certa quantidade de iterações no mapa esses 60% dos carros são escolhidos novamente de forma aleatória e carros que estavam livres podem ficar ocupados ou vice-versa. Os valores aleatórios só não influenciam os carros que estão em uso pela central ou estacionados. A cada certa quantidade de iterações as próximas direções e direções atuais também são escolhidas novamente de forma aleatória, isso evita que os carros fiquem sempre parados quando não puderem avançar em uma mesma direção.
+
+Como a central sabe todos os status dos carros, é possível selecionar um carro que esteja livre (status 0) para movimentar ele no mapa. A central vai enviar as novas direções atuais para movimentar o carro. Esse movimento consiste em observar se o carro está na posição com x e y iguais ao que o usuário fez a requisição, se estiver acima ela deve deslocar o carro para baixo, se tiver abaixo da posição ela deve deslocar o carro para cima. Ao chegar no mesmo x, porém com y diferente, a central vai fazer o carro se deslocar para esquerda ou direita para fazer o carro ir para o destino certo. Se ao observar y, o carro tiver que passar do x que ele deveria estar, a central vai observar novamente o x. Essa mudança de observação fica alterando enquanto o carro não chega no destino. Isso foi necessário, pois o carro poderia chegar ao x de destino e não poder deslocar o y para esquerda ou direita por conta dos quarteirões.
+
+
 
 ## Protocolo de comunicação
 Inicialmente os carros estão em movimento no mapa 
+
+## Central
 
 ## Usuário
 
