@@ -22,7 +22,10 @@ Foi definido três valores para o tamanho dos quarteirões (60, 120 ou 240), ess
 Após construir o mapa foram nomeadas as ruas horizontais e verticais para uma melhor visualização.
 
 Foi criado um objeto chamado de “cidade” que contém listas com coordenadas das ruas horizontais e verticais, lista com os limites superior, inferior, esquerda e direita do mapa, o valor do passo do carro (fixo em 30) e o tamanho do quarteirão.
-—--------- imagem com a class cidade
+
+<p align="center">
+    <img src="https://github.com/luizgmartins/Simulador_de_Trafego_Usando_MQTT_e_Python/blob/main/Imagens/class_cidade.png"></a>
+</p>
 
 Para facilitar o deslocamento dos carros e o envio de posições para a central, foi criada uma matriz contendo todas as possíveis posições para os carros poderem se deslocar no mapa.
 
@@ -48,13 +51,15 @@ Para preencher o que falta é utilizado a mesma lógica, mas agora olhando as fa
 Como os carros estarão sempre no centro das posições, é possível saber exatamente onde o carro está, deslocar ele facilmente e impedir que ele entre nos quarteirões sem querer.
 
 ## Movimento dos carros
-Ao selecionar a quantidade inicial de carros esses serão criados como instâncias e conectados ao broker. No fim da simulação cada carro é desconectado ao broker. Cada carro também é criado como um objeto que possui uma ID de identificação e uma placa (Mas a placa não foi implementada com valores diferentes). O objeto carro possui uma função de deslocamento (movimento_carro).
+Ao selecionar a quantidade inicial de carros esses serão criados como instâncias e conectados ao broker. No fim da simulação cada carro é desconectado do broker. Cada carro também é criado como um objeto que possui uma ID de identificação e uma placa (Mas a placa não foi implementada com valores diferentes). O objeto carro possui uma função de deslocamento (movimento_carro).
 
-Para colocar os carros no mapa foi necessário criar uma cópia da imagem de fundo que estava em branco no início do script e foi utilizado para criar o mapa e suas cores são invertidas, assim é possível criar uma máscara contendo somente o que foi desenhado nela. No fim a imagem do mapa é subtraído dessa máscara contendo os carros, isso resulta em uma imagem contendo o mapa e os carros. Isso foi necessário para que o movimento dos carros não apagasse as linhas do mapa caso eles pudessem ser desenhados em cima de alguma linha.
+Para colocar os carros no mapa foi necessário criar uma cópia da imagem de fundo que estava em branco no início do script e foi utilizado para criar o mapa, suas cores são invertidas, assim é possível criar uma máscara contendo somente o que foi desenhado nela. No fim a imagem do mapa é subtraído dessa máscara contendo os carros, isso resulta em uma imagem contendo o mapa e os carros. Isso foi necessário para que o movimento dos carros não apagasse as linhas do mapa caso eles pudessem ser desenhados em cima de alguma linha.
 
-A lógica de movimento dos carros consiste em uma próxima direção, na direção atual, na velocidade do carro e sua posição anterior. A posição anterior é sempre a atual antes do próximo deslocamento do carro, assim é possível apagar o carro onde ele foi desenhado anteriormente para poder desenhá-lo na próxima posição do mapa. A velocidade do carro é 1 ou 0, caso seja 1 o carro desloca uma posição ou passo (que equivale a 30 pixels) e caso seja 0 ele fica parado. A velocidade é 0 sempre que a próxima direção que o carro irá seguir houver algum obstáculo, seja um carro ou alguma posição que ele não pode ir. As “próximas direções” dos carros possuem valores entre 0 e 3, sendo, próxima direção para direita, para esquerda, para cima e para baixo, respectivamente. As “direções atuais” podem ser valores entre 0 e 2, sendo direção atual igual a 0 para que o carro continue na mesma direção que ele está. Por exemplo, se a próxima direção dele é 0 (para direita) e a direção atual for 0 ele continua seguindo para direita. Tanto para próxima direção para direita ou para esquerda, as direções atuais, se tiverem valores 1 ou 2, irão fazer o carro ir para próxima direção para cima ou para baixo, respectivamente. Isto é, se a próxima direção for 1 (para esquerda), mas a direção atual for 1, o carro vai se movimentar para que assim que for possível começar a se deslocar para cima. 
+A lógica de movimento dos carros consiste em uma próxima direção, em uma direção atual, na velocidade do carro e sua posição anterior. A posição anterior é sempre a atual antes do próximo deslocamento do carro, assim é possível apagar o carro onde ele foi desenhado anteriormente para poder desenhá-lo na próxima posição do mapa. A velocidade do carro é 1 ou 0, caso seja 1 o carro desloca uma posição ou passo (que equivale a 30 pixels) e caso seja 0 ele fica parado. A velocidade é 0 sempre que a próxima direção que o carro irá seguir houver algum obstáculo, seja um carro ou alguma posição que ele não pode ir. As “próximas direções” dos carros possuem valores entre 0 e 3, sendo, próxima direção para direita, para esquerda, para cima e para baixo, respectivamente. As “direções atuais” podem ser valores entre 0 e 2, sendo direção atual igual a 0 para que o carro continue na mesma direção que ele está. Por exemplo, se a próxima direção dele é 0 (para direita) e a direção atual for 0 ele continua seguindo para direita. 
 
-Tanto para próxima direção para cima ou para baixo as direções atuais, se tiverem valores 1 ou 2, irão fazer o carro ir para próxima direção para direita ou para esquerda, respectivamente. Isto é, se a próxima direção for 2 (para cima), mas a direção atual for 1, o carro vai se movimentar para que assim que for possível começar a se deslocar para direita.
+Tanto para próxima direção para direita ou para esquerda, as direções atuais, se tiverem valores 1 ou 2, irão fazer o carro ir para próxima direção para cima ou para baixo, respectivamente. Isto é, se a próxima direção for 1 (para esquerda), mas a direção atual for 1, o carro vai se movimentar para que assim que for possível começar a se deslocar para cima. Tanto para próxima direção para cima ou para baixo, as direções atuais, se tiverem valores 1 ou 2, irão fazer o carro ir para próxima direção para direita ou para esquerda, respectivamente. Isto é, se a próxima direção for 2 (para cima), mas a direção atual for 1, o carro vai se movimentar para que assim que for possível começar a se deslocar para direita.
+
+As restrições de movimento observam se o carro está em uma posição específica, por exemplo, se o carro estiver em uma rua vertical e posição onde seu Y da matriz de posições for ímpar ele só pode ir para cima ou assim que possível ir para direita ou esquerda. Portanto, sempre que Y for ímpar o carro não pode ir para baixo. Isso limita alguns valores para os quarteirões no início da aplicação, pois é necessário que a divisão do quarteirão por 30 seja igual a um número par, caso contrário a posição de Y sendo ímpar o carro não poderia ir para cima. Isso foi utilizado para que os carros não andem na contramão das ruas.
 
 O movimento do carro também verifica se chegou aos limites do mapa ou se o carro irá entrar em um quarteirão. Nesses casos o carro deve ir para uma outra direção válida.
 
@@ -72,28 +77,40 @@ Como a central sabe todos os status dos carros, é possível selecionar um carro
 ### Comunicação entre carro e central
 Existem três tipos de mensagem enviadas para a central. A primeira mensagem é a mensagem de início que possui o formato visto na imagem abaixo e serve para indicar a central que o script dos carros já iniciou e que a central pode começar a rodar o seu loop. Essa mensagem é publicada no tópico “transporte/inicio”.
 
-—----- inserir imagem com o formato da mensagem de inicio
+<p align="center">
+    <img src="https://github.com/luizgmartins/Simulador_de_Trafego_Usando_MQTT_e_Python/blob/main/Imagens/mensagem_inicio.png"></a>
+</p>
 
 A segunda mensagem é uma string com todas as posições válidas contidas na matriz de posições. São posições que o usuário pode requisitar e que os carros podem se mexer no mapa. Essa mensagem é publicada no tópico “transporte/matrizo”
 
 Na outra mensagem os carros publicam no tópico “transporte/carroX” sendo X o número ID de cada carro. Esse ID é único para cada carro. Esse tipo de mensagem tem o formato que pode ser visto na imagem abaixo.
 
-—----- inserir imagem com o formato da mensagem dos carros
+<p align="center">
+    <img src="https://github.com/luizgmartins/Simulador_de_Trafego_Usando_MQTT_e_Python/blob/main/Imagens/mensagem_carros.png"></a>
+</p>
 
 O script dos carros está inscrito no sub “transporte/central_carro” que recebe as mensagens da central.
 
 ### Comunicação entre central e carros
 A central recebe e trata as mensagens vindas dos carros e envia uma mensagem para o script dos carros. O formato das mensagens é o mesmo e pode ser visto na imagem abaixo. A central é inscrita nas subs “transporte/inicio”, “transporte/matrizo” e “transporte/carroX”, sendo X o número ID de cada carro. A mensagem enviada pela central é publicada no tópico “transporte/central_carro”.
 
+<p align="center">
+    <img src="https://github.com/luizgmartins/Simulador_de_Trafego_Usando_MQTT_e_Python/blob/main/Imagens/mensagem_central_carro.png"></a>
+</p>
+
 ### Comunicação entre usuário e central
 O usuário faz as requisições de viagem seguindo o tipo de mensagem visto na imagem abaixo.
 
-—----- inserir imagem com o formato da mensagem do usuário
+<p align="center">
+    <img src="https://github.com/luizgmartins/Simulador_de_Trafego_Usando_MQTT_e_Python/blob/main/Imagens/mensagem_usuario.png"></a>
+</p>
 
 ### Comunicação entre central e usuário
 A central envia as respostas das mensagens do usuário. O formato dessas mensagens podem ser vistos na imagem abaixo.
 
-—----- inserir imagem com o formato da mensagem do usuário
+<p align="center">
+    <img src="https://github.com/luizgmartins/Simulador_de_Trafego_Usando_MQTT_e_Python/blob/main/Imagens/mensagem_central_usuario.png"></a>
+</p>
 
 
 ## Central
@@ -103,7 +120,7 @@ As mensagens recebidas pela central são salvas em arquivos de texto contendo a 
 
 Após receber a mensagem de início a central retorna uma mensagem de confirmação para os carros e assim o script dos carros pode iniciar a simulação. 
 
-Caso receba mensagem de solicitação do usuário, terá que verificar se o valor de x e y recebidos são válidos, se forem a central envia uma mensagem de confirmação para o usuário. Caso sejam inválidos, a central envia mensagem para o usuário cancelando a viagem e envia para o carro mandando estacionar.
+Caso receba mensagem de solicitação do usuário, terá que verificar se o valor de x e y recebidos são válidos, se forem, a central envia uma mensagem de confirmação para o usuário. Caso sejam inválidos, a central envia mensagem para o usuário cancelando a viagem e envia para o carro mandando estacionar.
 
 A central seleciona um dos carros livres para mover no mapa e envia uma mensagem para estacionar o carro. Como a central já validou as posições x e y recebidas do usuário, já encaminha uma mensagem para o carro selecionado e faz ele se mover no mapa até a posição que o usuário requisitou como início da viagem.
 
