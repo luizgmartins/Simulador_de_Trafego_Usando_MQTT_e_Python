@@ -1,7 +1,11 @@
 # Simulador de Tráfego Usando MQTT e Python
 Projeto da disciplina de Introdução a Python em Engenharia da Universidade Federal de Pernambuco - UFPE. O projeto consiste em um simulador de tráfego, contendo um mapa de uma cidade fictícia, carros se movendo aleatoriamente ou comandados por uma central e um usuário fazendo requisições de viagem. A comunicação entre os carros e a central, assim como a comunicação entre a central e o usuário é via MQTT através de um broker. O sistema atualiza de forma discreta ao longo do tempo e as posições, velocidades e status dos veículos são enviados para a central que utiliza esses dados e também armazena em arquivos.
 
+
 ----- Inserir gif com a simulação rodando
+
+OBS.: Não foi implementado programação paralela para executar os scripts em conjunto, portanto é necessário executá-los em terminais separados. De preferência na sequência Carro.py, Central.py e Usuario.py.
+OBS2.: O script do usuário nem sempre atualiza os prints das mensagens apesar de está em loop. É necessário pressionar alguma tecla do teclado que não esteja em uso no script para aparecer os prints.
 
 ## Criação do mapa da cidade
 Foi utilizada a biblioteca do opencv para criação do mapa e do movimento dos carros de forma visual. Inicialmente, é utilizado uma imagem de fundo totalmente em branco e a partir dela é criado o mapa da cidade com ruas, quarteirões e posições para movimentar os carros. Para criar o mapa é definido alguns parâmetros: a largura da rua é de 30 pixels, contendo duas faixas de 15 pixels cada; o tamanho dos quarteirões são definidos no início do script e a partir do valor dele será definido a quantidade de ruas e o tamanho total do mapa.
@@ -31,7 +35,6 @@ Como os carros estarão sempre no centro das posições, é possível saber exat
 ## Movimento dos carros
 Ao selecionar a quantidade inicial de carros esses serão criados como instâncias e conectados ao broker. No fim da simulação cada carro é desconectado ao broker. Cada carro também é criado como um objeto que possui uma ID de identificação e uma placa (Mas a placa não foi implementada com valores diferentes). O objeto carro possui uma função de deslocamento (movimento_carro).
 Para colocar os carros no mapa foi necessário criar uma cópia da imagem de fundo que estava em branco no início do script e foi utilizado para criar o mapa e suas cores são invertidas, assim é possível criar uma máscara contendo somente o que foi desenhado nela. No fim a imagem do mapa é subtraído dessa máscara contendo os carros, isso resulta em uma imagem contendo o mapa e os carros. Isso foi necessário para que o movimento dos carros não apagasse as linhas do mapa caso eles pudessem ser desenhados em cima de alguma linha.
-
 A lógica de movimento dos carros consiste em uma próxima direção, na direção atual, na velocidade do carro e sua posição anterior. A posição anterior é sempre a atual antes do próximo deslocamento do carro, assim é possível apagar o carro onde ele foi desenhado anteriormente para poder desenhá-lo na próxima posição do mapa. A velocidade do carro é 1 ou 0, caso seja 1 o carro desloca uma posição ou passo (que equivale a 30 pixels) e caso seja 0 ele fica parado. A velocidade é 0 sempre que a próxima direção que o carro irá seguir houver algum obstáculo, seja um carro ou alguma posição que ele não pode ir. As “próximas direções” dos carros possuem valores entre 0 e 3, sendo, próxima direção para direita, para esquerda, para cima e para baixo, respectivamente. As “direções atuais” podem ser valores entre 0 e 2, sendo direção atual igual a 0 para que o carro continue na mesma direção que ele está. Por exemplo, se a próxima direção dele é 0 (para direita) e a direção atual for 0 ele continua seguindo para direita. Tanto para próxima direção para direita ou para esquerda, as direções atuais, se tiverem valores 1 ou 2, irão fazer o carro ir para próxima direção para cima ou para baixo, respectivamente. Isto é, se a próxima direção for 1 (para esquerda), mas a direção atual for 1, o carro vai se movimentar para que assim que for possível começar a se deslocar para cima. 
 
 Tanto para próxima direção para cima ou para baixo as direções atuais, se tiverem valores 1 ou 2, irão fazer o carro ir para próxima direção para direita ou para esquerda, respectivamente. Isto é, se a próxima direção for 2 (para cima), mas a direção atual for 1, o carro vai se movimentar para que assim que for possível começar a se deslocar para direita.
@@ -49,12 +52,67 @@ Como a central sabe todos os status dos carros, é possível selecionar um carro
 
 
 ## Protocolo de comunicação
-Inicialmente os carros estão em movimento no mapa 
+### Comunicação entre carro e central
+Existem três tipos de mensagem enviadas para a central. A primeira mensagem é a mensagem de início que possui o formato visto na imagem abaixo e serve para indicar a central que o script dos carros já iniciou e que a central pode começar a rodar o seu loop. Essa mensagem é publicada no tópico “transporte/inicio”
+
+—----- inserir imagem com o formato da mensagem de inicio
+
+A segunda mensagem é uma string com todas as posições válidas contidas na matriz de posições. São posições que o usuário pode requisitar e que os carros podem se mexer no mapa. Essa mensagem é publicada no tópico “transporte/matrizo”
+
+Na outra mensagem os carros publicam no tópico “transporte/carroX” sendo X o número ID de cada carro. Esse ID é único para cada carro. Esse tipo de mensagem tem o formato que pode ser visto na imagem abaixo.
+
+—----- inserir imagem com o formato da mensagem dos carros
+
+O script dos carros está inscrito no sub “transporte/central_carro” que recebe as mensagens da central.
+
+### Comunicação entre central e carros
+A central recebe e trata as mensagens vindas dos carros e envia uma mensagem para o script dos carros. O formato das mensagens é o mesmo e pode ser visto na imagem abaixo. A central é inscrita nas subs “transporte/inicio”, “transporte/matrizo” e “transporte/carroX”, sendo X o número ID de cada carro. A mensagem enviada pela central é publicada no tópico “transporte/central_carro”.
+
+### Comunicação entre usuário e central
+O usuário faz as requisições de viagem seguindo o tipo de mensagem visto na imagem abaixo.
+
+—----- inserir imagem com o formato da mensagem do usuário
+
+### Comunicação entre central e usuário
+A central envia as respostas das mensagens do usuário. O formato dessas mensagens podem ser vistos na imagem abaixo.
+
+—----- inserir imagem com o formato da mensagem do usuário
+
 
 ## Central
+Primeiramente, a central recebe a mensagem de início e a matriz de posições. Essas mensagens são tratadas, no caso da primeira é utilizada para iniciar o loop da central, receber os valores de X_MAX, Y_MAX e o número de carros. Já a matriz de posições é transformada em uma lista contendo as possíveis posições de x e y que o usuário poderá solicitar como destino válido. A central também cria uma lista contendo todos os status dos carros. Essa lista vai sendo atualizada na medida que recebe os status de cada carro no decorrer da simulação.
+
+As mensagens recebidas pela central são salvas em arquivos de texto contendo a data e hora e a mensagem recebida. É criado um novo arquivo de texto para cada tópico que a central está inscrita.
+
+Após receber a mensagem de início a central retorna uma mensagem de confirmação para os carros e assim o script dos carros pode iniciar a simulação. 
+
+Caso receba mensagem de solicitação do usuário, terá que verificar se o valor de x e y recebidos são válidos, se forem a central envia uma mensagem de confirmação para o usuário. Caso sejam inválidos, a central envia mensagem para o usuário cancelando a viagem e envia para o carro mandando estacionar.
+
+A central seleciona um dos carros livres para mover no mapa e envia uma mensagem para estacionar o carro. Como a central já validou as posições x e y recebidas do usuário, já encaminha uma mensagem para o carro selecionado e faz ele se mover no mapa até a posição que o usuário requisitou como início da viagem.
+
+Após chegar ao local da partida, ela comunica ao usuário confirmando que o carro já chegou ao local e envia ao carro em uso para estacionar. A central aguarda a mensagem do usuário com a localização de destino final, verifica se a localização é válida e, se for, manda mensagem de confirmação para o usuário.
+
+Logo após, começa a deslocar o carro novamente para a direção do destino final e quando o carro chega no local manda mensagem para ele estacionar e manda mensagem para o usuário confirmando que chegou ao destino.
+
+Durante a viagem o usuário pode solicitar o cancelamento da mesma, fazendo com que a central envie a confirmação de cancelamento para o usuário e manda o carro em uso estacionar. 
 
 ## Usuário
+O usuário faz as solicitações de viagem à central e solicitações de cancelamento e trata as confirmações recebidas pela central. Ficando a maior parte do tempo aguardando mensagens de confirmação.
 
 ## Referências
+Notas de aula
+* https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
+* https://www.youtube.com/watch?v=QAaXNt0oqSI&ab_channel=SteveCope
+* https://docs.opencv.org/4.x/dc/d4d/tutorial_py_table_of_contents_gui.html
 
 ## Possíveis melhorias
+* Fazer com que o script da central rode em paralelo com o dos carros logo após a conexão dos carros ao broker MQTT. (Essa parte seria feita para facilitar o início da simulação, pois se fosse um sistema real a central seria executada em um sistema diferente dos carros, assim como o usuário. A única conexão entre eles deve ser  via MQTT)
+
+* A interface do usuário foi improvisada, porém deveria ser um tipo de app ou site que o usuário fizesse as requisições para uma rua específica e um número representando uma posição na rua. O usuário teria as ruas disponíveis no próprio app ou site de acordo com a configuração da simulação.
+
+* A central poderia ter um servidor html para exibir os dados históricos de posição, velocidade e as requisições dos usuários.
+
+* Poderia melhorar o código para que vários usuários pudessem se conectar ao mesmo tempo.
+Boa parte do código foi feita utilizando nomes e identificações genéricos, poderia criar um sistema com nomes de ruas de verdade e mais identificações dos carros como placas em formato real, modelo do carro e etc.
+
+* Alguns possíveis bugs no movimento dos carros poderiam ser melhorados para evitar que o carro fique muito tempo parado na rua. Assim como implementar velocidades maiores que 1.
