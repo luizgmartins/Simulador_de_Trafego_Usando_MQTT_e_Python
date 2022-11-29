@@ -44,16 +44,16 @@ if k == 27:
     cv2.destroyAllWindows()
 else:
     cv2.destroyWindow('Inicio')
-    cv2.namedWindow('Inicio', cv2.WINDOW_AUTOSIZE)
+    cv2.namedWindow('Inicio', cv2.WINDOW_NORMAL)
     if q == 0:
         quarteirao = 240
-        cv2.createTrackbar('Carros','Inicio',0,30,nothing)
+        cv2.createTrackbar('Carros','Inicio',1,30,nothing)
     elif q == 1:
         quarteirao = 120
-        cv2.createTrackbar('Carros','Inicio',0,40,nothing)
+        cv2.createTrackbar('Carros','Inicio',1,40,nothing)
     elif q == 2:
         quarteirao = 60
-        cv2.createTrackbar('Carros','Inicio',0,60,nothing)
+        cv2.createTrackbar('Carros','Inicio',1,60,nothing)
     k = 0
     img2 = np.zeros((1,200,3), np.uint8)
     while (1):
