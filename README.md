@@ -143,7 +143,7 @@ Para encerrar o script da Central.py deve pressionar a tecla "esc" na janela da 
 Para fazer solicitações de viagem no script do usuário deve pressionar a tecla "y" e pressionar "enter" para envio dos valores. Para cancelar viagens pressionar a tecla "s". Para encerrar o script do Usuário.py basta pressionar a tecla "esc".
 
 ## Referências
-Notas de aula
+* Notas de aula
 * https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
 * https://www.youtube.com/watch?v=QAaXNt0oqSI&ab_channel=SteveCope
 * https://docs.opencv.org/4.x/dc/d4d/tutorial_py_table_of_contents_gui.html
